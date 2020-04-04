@@ -1,0 +1,25 @@
+<mat-form-field>
+    <mat-label>Email</mat-label>
+    <input matInput>
+</mat-form-field>
+
+<mat-grid-list cols="4">
+  <mat-grid-tile *ngFor="let icr of icrs" >
+    <mat-card class="icr-card" style="margin-top:10px;">
+      <mat-card-header>
+        <mat-card-title>{{icr.id}}</mat-card-title>
+        <mat-card-subtitle>{{icr.name}}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="icr.type==='G'">
+          Root: {{icr.value}}<br/>
+          File: {{icr.file}}
+        </div>
+        <div *ngIf="icr.type==='R'">Routine: {{icr.value}}</div>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button>VIEW Full Description</button>
+      </mat-card-actions>
+    </mat-card>
+  </mat-grid-tile>
+</mat-grid-list>
