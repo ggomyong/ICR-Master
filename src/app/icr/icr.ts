@@ -4,6 +4,6 @@ export class Icr {
   type: string;
   value: string;
   file: string;
-  description: string;
+  description: Array<string>;
   components: Array<string>;
 }

@@ -7,7 +7,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 
 import { HttpClientModule } from '@angular/common/http';
-
+import { FormsModule } from '@angular/forms';
 import {MatBadgeModule} from '@angular/material/badge';
 import {MatBottomSheetModule} from '@angular/material/bottom-sheet';
 import {MatButtonModule} from '@angular/material/button';
@@ -42,6 +42,7 @@ import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatTreeModule} from '@angular/material/tree';
 import {IcrComponent} from './icr/icr.component';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -52,6 +53,7 @@ import {IcrComponent} from './icr/icr.component';
     AppRoutingModule,
     BrowserAnimationsModule,
     HttpClientModule,
+    FormsModule,
     MatBadgeModule,
    MatBottomSheetModule,
    MatButtonModule,
@@ -86,6 +88,7 @@ import {IcrComponent} from './icr/icr.component';
    MatToolbarModule,
    MatTooltipModule,
    MatTreeModule,
+
   ],
   providers: [],
   bootstrap: [AppComponent]

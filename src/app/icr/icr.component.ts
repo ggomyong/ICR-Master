@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {IcrService} from './icr.service';
 import {Icr} from './icr';
+import {PageEvent} from '@angular/material/paginator';
 
 @Component({
   selector: 'tos-icr',
@@ -12,13 +13,26 @@ export class IcrComponent implements OnInit {
   error: any;
   headers: string[];
   rawData: any;
-  icrs: Icr[];
+  icrs: Icr[]=[];
+  filteredIcrs: Icr[]=[];
+
+  pageSize:number  = 30;
+  pageStart:number = 0;
+  pageSizeOptions: number[] = [15, 30, 60, 180, 600];
+  pageIcrs: Icr[]=[];
+  pageLength: number = 0;
+
+  public displayFilter: string="B";
+  public displayQuery: string="";
+  public displayField: string="";
+
+  // MatPaginator Output
+  pageEvent: PageEvent;
 
   constructor(private icrService: IcrService) { }
 
   ngOnInit(): void {
     this.getIcrs();
-
   }
 
   getIcrs(): void {
@@ -26,8 +40,60 @@ export class IcrComponent implements OnInit {
       data => {
         this.rawData = data
         this.processICR();
+
+        this.filteredIcrs=this.icrs;
+        this.pageLength=this.filteredIcrs.length;
+        this.displayIcrCards();
+        console.log(this.filteredIcrs);
       }
     );
+  }
+
+  filterChange($event) {
+    this.pageStart=0;
+    if ($event.value=='B') {
+      this.filteredIcrs=this.icrs;
+
+      this.pageLength=this.filteredIcrs.length;
+      this.displayIcrCards();
+      return;
+    }
+
+    this.filteredIcrs=[];
+
+    for (let i=0; i<this.icrs.length; i++) {
+      if (this.icrs[i].type==$event.value) {
+        this.filteredIcrs.push(this.icrs[i]);
+      }
+    }
+    this.pageLength=this.filteredIcrs.length;
+
+    this.displayIcrCards();
+    return;
+  }
+
+  displayIcrCards() {
+    this.pageIcrs=[]; //clear out existing displaying cards
+
+    for (let i=(this.pageStart*this.pageSize); i<(this.pageStart*this.pageSize)+this.pageSize; i++) {
+      if (this.filteredIcrs[i]==undefined || this.filteredIcrs[i]==null) break;
+      this.pageIcrs.push(this.filteredIcrs[i]);
+    }
+
+  }
+
+  onPageChanged(event):any {
+    this.pageStart=event.pageIndex;
+    this.pageSize=event.pageSize;
+    this.pageLength=this.filteredIcrs.length;
+    this.displayIcrCards();
+    return event;
+  }
+
+  setPageSizeOptions(setPageSizeOptionsInput: string) {
+    if (setPageSizeOptionsInput) {
+      this.pageSizeOptions = setPageSizeOptionsInput.split(',').map(str => +str);
+    }
   }
 
   processICR(): void {
@@ -52,7 +118,9 @@ export class IcrComponent implements OnInit {
       tempIcr.type=dataline[2];
       tempIcr.value=dataline[3];
       tempIcr.file=dataline[4];
-      tempIcr.description=dataline[5];
+      let tempDesc:string=dataline[5];
+      tempIcr.description=tempDesc.split('\\n');
+
       tempIcr.components=new Array();
       for (let i=6; i<dataline.length; i++) {
         tempIcr.components.push(dataline[i]);
@@ -60,5 +128,6 @@ export class IcrComponent implements OnInit {
       this.icrs.push(tempIcr);
       counter++;
     }
+
   }
 }

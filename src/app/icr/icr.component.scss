@@ -1,8 +1,33 @@
 .icr-card {
   width: 100%;
-  height: 330px;
+  height: 400px;
   margin-left: 5px;
   margin-right: 5px;
   margin-top: 5px;
   margin-bottom: 5px;
+  .icr-description{
+    overflow: hidden;
+    height: 150px;
+  }
+  .icr-components{
+    overflow: hidden;
+    height: 130px;
+  }
+}
+.main-search-form {
+  width: 100%;
+  margin: 25px 25px 25px 25px;
+
+  #dropdown-field {
+    width: 20%;
+  }
+  #query-string {
+    width: 60%;
+  }
+  #display-filter {
+    width: 20%;
+    .radio-option {
+      right-margin: 5px;
+    }
+  }
 }
