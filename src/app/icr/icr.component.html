@@ -2,18 +2,17 @@
   <form style="width: 100%;">
     <mat-form-field id="dropdown-field">
       <mat-select required [(ngModel)]="displayField" [ngModelOptions]="{standalone: true}">
-        <mat-option>ICR #</mat-option>
-        <mat-option>Name</mat-option>
-        <mat-option>Value</mat-option>
-        <mat-option>Description</mat-option>
-        <mat-option>Value+Description</mat-option>
+        <mat-option *ngFor="let field of fieldList" [value]="field.value">{{field.external}}</mat-option>
       </mat-select>
       <mat-label>ICR Field</mat-label>
     </mat-form-field>
 
     <mat-form-field id="query-string">
         <mat-label>Filter by...</mat-label>
-        <input matInput [(ngModel)]="displayQuery" [ngModelOptions]="{standalone: true}">
+        <input matInput [(ngModel)]="displayQuery" [ngModelOptions]="{standalone: true}" (change)="queryChange($event)">
+        <button type="button" mat-button *ngIf="displayQuery" matSuffix mat-icon-button aria-label="Clear" (click)="resetQuery()">
+          <mat-icon>close</mat-icon>
+        </button>
     </mat-form-field>
 
     <mat-radio-group name="displayFilter" [(ngModel)]="displayFilter" [ngModelOptions]="{standalone: true}" id="display-filter" aria-label="Select an option">
@@ -24,7 +23,7 @@
   </form>
 </div>
 
-<mat-paginator [length]="pageLength"
+<mat-paginator #paginator [length]="pageLength"
                [pageSize]="pageSize"
                [pageSizeOptions]="pageSizeOptions"
                (page)="pageEvent = onPageChanged($event)">
@@ -59,8 +58,9 @@
           </div>
         </div>
       </mat-card-content>
-      <mat-card-actions>
-        <button mat-raised-button>VIEW Full Description</button>
+      <mat-card-actions style="text-align: right;">
+        <button mat-raised-button>View/Edit</button>
+        <button mat-raised-button>Validate</button>
       </mat-card-actions>
     </mat-card>
   </mat-grid-tile>
