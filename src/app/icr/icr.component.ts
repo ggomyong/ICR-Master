@@ -4,6 +4,7 @@ import {PageEvent, MatPaginatorModule, MatPaginator} from '@angular/material/pag
 import {IcrService} from './icr.service';
 import {Icr} from './icr';
 import {IcrField} from './icr-field';
+import { MaterialFileInputModule } from 'ngx-material-file-input';
 
 @Component({
   selector: 'tos-icr',
@@ -118,42 +119,48 @@ export class IcrComponent implements OnInit {
     let tempIcrs:Icr[]=[];
     let descs:string='';
 
+    if (this.displayQuery == '') {
+      this.filteredIcrs=this.icrs;
+      this.paginator.firstPage();
+      this.displayIcrCards();
+    }
+
     for (let i=0; i<this.filteredIcrs.length; i++) {
       descs=this.filteredIcrs[i].description.join('\n');
 
       switch(this.displayField) {
         case '#':
-          if (this.filteredIcrs[i].id.toString().includes(this.displayQuery)) {
+          if (this.filteredIcrs[i].id.toString().toLowerCase().includes(this.displayQuery.toLowerCase())) {
             tempIcrs.push(this.filteredIcrs[i]);
           }
           break;
         case 'name':
-          if (this.filteredIcrs[i].name.includes(this.displayQuery)) {
+          if (this.filteredIcrs[i].name.toLowerCase().includes(this.displayQuery.toLowerCase())) {
             tempIcrs.push(this.filteredIcrs[i]);
           }
           break;
         case 'valdesc':
-          if (this.filteredIcrs[i].value.includes(this.displayQuery) || descs.includes(this.displayQuery)) {
+          if (this.filteredIcrs[i].value.toLowerCase().includes(this.displayQuery.toLowerCase()) || descs.toLowerCase().includes(this.displayQuery.toLowerCase())) {
             tempIcrs.push(this.filteredIcrs[i]);
           }
           if (this.filteredIcrs[i].type=='G') {
-            if (this.filteredIcrs[i].file.includes(this.displayQuery)) {
+            if (this.filteredIcrs[i].file.includes(this.displayQuery.toLowerCase())) {
               tempIcrs.push(this.filteredIcrs[i]);
             }
           }
           break;
         case 'val':
-          if (this.filteredIcrs[i].value.includes(this.displayQuery)) {
+          if (this.filteredIcrs[i].value.toLowerCase().includes(this.displayQuery.toLowerCase())) {
             tempIcrs.push(this.filteredIcrs[i]);
           }
           if (this.filteredIcrs[i].type=='G') {
-            if (this.filteredIcrs[i].file.includes(this.displayQuery)) {
+            if (this.filteredIcrs[i].file.includes(this.displayQuery.toLowerCase())) {
               tempIcrs.push(this.filteredIcrs[i]);
             }
           }
           break;
         case 'desc':
-          if (descs.includes(this.displayQuery)) {
+          if (descs.toLowerCase().includes(this.displayQuery.toLowerCase())) {
             tempIcrs.push(this.filteredIcrs[i]);
             break;
           }

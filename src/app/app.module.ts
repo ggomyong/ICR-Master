@@ -42,6 +42,9 @@ import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatTreeModule} from '@angular/material/tree';
 import {IcrComponent} from './icr/icr.component';
+import { MaterialFileInputModule } from 'ngx-material-file-input';
+
+
 
 @NgModule({
   declarations: [
@@ -88,7 +91,7 @@ import {IcrComponent} from './icr/icr.component';
    MatToolbarModule,
    MatTooltipModule,
    MatTreeModule,
-
+   MaterialFileInputModule
   ],
   providers: [],
   bootstrap: [AppComponent]

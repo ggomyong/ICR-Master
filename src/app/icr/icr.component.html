@@ -33,6 +33,7 @@
   <mat-grid-tile *ngFor="let icr of pageIcrs" >
     <mat-card class="icr-card" style="margin-top:10px;">
       <mat-card-header>
+        <mat-icon mat-card-avatar>done_outline</mat-icon>
         <mat-card-title>
           {{icr.id}}&nbsp;-&nbsp;{{icr.value}}
           <span *ngIf="icr.type==='G'">
@@ -65,3 +66,9 @@
     </mat-card>
   </mat-grid-tile>
 </mat-grid-list>
+
+<mat-paginator #paginator [length]="pageLength"
+               [pageSize]="pageSize"
+               [pageSizeOptions]="pageSizeOptions"
+               (page)="pageEvent = onPageChanged($event)">
+</mat-paginator>
