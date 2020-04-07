@@ -79,7 +79,7 @@ export class IcrComponent implements OnInit {
       this.fieldList.push({value: 'val', external: 'Global Root'});
       this.fieldList.push({value: 'valdesc', external: 'Global Root + Description'});
     }
-    this.displayField='val';
+    if (this.displayField=='' || this.displayField==undefined || this.displayField==null) this.displayField='val';
   }
 
   resetQuery() {
