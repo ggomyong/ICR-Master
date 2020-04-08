@@ -4,6 +4,16 @@ export class Icr {
   type: string;
   value: string;
   file: string;
+  validated: boolean;
   description: Array<string>;
-  components: Array<string>;
+  tags: Array<string>;
+  fields: Array<Field>;
+  fieldIndex: Array<string>;
+}
+
+export class Field {
+  file: number;
+  value: string;
+  direction: string;
+  method: string;
 }
