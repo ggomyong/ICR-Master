@@ -25,7 +25,7 @@ export class AppComponent {
     fr.onload = (e:any) => {
         // e.target.result should contain the text
         //console.log(e.target.result);
-        this.icrService.parseIcr(e.target.result.split('\n'));
+        this.icrService.parseAndSaveIcr(e.target.result.split('\n'));
     };
     fr.readAsText(evt[0]);
   }

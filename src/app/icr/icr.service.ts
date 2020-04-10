@@ -19,7 +19,7 @@ export class IcrService {
       );
   }
 
-  public parseIcr(texts:Array<string>) {
+  public parseAndSaveIcr(texts:Array<string>) {
     //Try to parse the raw ICRs into meaning JSON objects.
     let icr:Icr=new Icr();
     let icrs:Array<Icr>=[];
@@ -66,7 +66,7 @@ export class IcrService {
       else if (text.includes('DESCRIPTION: ')) {
         descriptionFlag=true;
 
-        switch(array[3]) {
+        switch(array[2]) {
           case 'File':
             icr.type='G';
             break;
@@ -90,8 +90,10 @@ export class IcrService {
         icr.description.push(array.join(' '));
       }
     }
-
-    console.log(icrs);
+    return this.http.post('/api/upload', icrs)
+    .subscribe((response)=>{
+      console.log(response);
+    })
   }
 
   public breakAndCombine(words:string):Array<string> {
