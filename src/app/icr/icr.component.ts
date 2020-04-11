@@ -1,14 +1,14 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { ViewChild } from '@angular/core'
 import {PageEvent, MatPaginatorModule, MatPaginator} from '@angular/material/paginator';
-import {IcrService} from './icr.service';
+import {IcrService, IcrMaster} from './icr.service';
 import {Icr} from './icr';
 import {Field} from './icr';
 import {IcrField} from './icr-field';
 import { MaterialFileInputModule } from 'ngx-material-file-input';
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
-
+import {Injectable} from '@angular/core';
 
 @Component({
   selector: 'tos-icr',
@@ -38,32 +38,171 @@ export class IcrComponent implements OnInit {
   public displayFilter: string="B";
   public displayQuery: string="";
   public displayField: string="";
-
+  descriptionFlag=false;
 
   public fieldList: IcrField[] = [];
   displayedColumns: string[] = ['file', 'value', 'direction', 'method'];
-  constructor(private icrService: IcrService, public dialog: MatDialog) { }
-
-  ngOnInit(): void {
+  public constructor(private icrService: IcrService, public dialog: MatDialog) { }
+   ngOnInit(): void {
     this.getIcrs();
   }
 
+  public openFileUpload() {
+    let element: HTMLElement =document.getElementById('upload_icr_input') as HTMLElement;
+    element.click();
+  }
+
+  public handleFileInput(evt) {
+    let fr:FileReader = new FileReader();
+    fr.onload = (e:any) => {
+        // e.target.result should contain the text
+        //console.log(e.target.result);
+        this.handleBulkUpload(e.target.result.split('\n'));
+    };
+    fr.readAsText(evt[0]);
+  }
+  public breakAndCombine(words:string):Array<string> {
+    //First break and discard empty member and return only meaningful members
+    let strAry=words.split(' ');
+    let returnable:Array<string>=[];
+    for (let word of strAry) {
+      if (word.length>0) {
+        returnable.push(word);
+      }
+    }
+    return returnable;
+  }
+
+  public handleBulkUpload(texts:Array<string>) {
+    let icr:Icr=new Icr();
+    let icrs:Array<Icr>=[];
+    let icrList:Array<string>=[];
+
+    for (let text of texts) {
+      let array=this.breakAndCombine(text);
+      let descriptionFlag=false;
+
+      if (array[1]=='NAME:') {
+        if (icr.id>0) {
+          //icrs.push(icr); //push already created one, and then begin again.
+          icrList.push(icr.id.toString());
+          icrs.push(icr);
+        }
+        icr=new Icr(); //and then, start a new ICR instance
+        icr.id=Number(array[0]);
+        array.splice(0,2);
+        let name=array.join(' ');
+        if (name!=undefined && name !=null) name=name.replace(/\r/g, '');
+        icr.name=name;
+      }
+      else if (array[0]=='CUSTODIAL' && array[1]=='PACKAGE:') {
+        array.splice(0,2);
+        let custodialPackage=array.join(' ');
+        if (custodialPackage!=undefined && custodialPackage !=null) custodialPackage=custodialPackage.replace(/\r/g, '');
+        icr.custodialPackage=custodialPackage;
+      }
+      else if (array[0]=='SUBSCRIBING' && array[1]=='PACKAGE:') {
+        array.splice(0,2);
+        let subscribingPackage=array.join(' ');
+        if (subscribingPackage!=undefined && subscribingPackage !=null) subscribingPackage=subscribingPackage.replace(/\r/g, '');
+        icr.subscribingPackage=subscribingPackage;
+      }
+      else if (array[0]=='USAGE:') {
+        icr.usage=array[1];
+        array.splice(0,3);
+        let entered=text.split('ENTERED: ')[1];
+        if (entered!=undefined && entered !=null) entered=entered.replace(/\r/g, '');
+        icr.entered=entered;
+      }
+      else if (array[0]=='STATUS:') {
+        icr.status=array[1];
+        if (icr.status=='EXPIRES:') icr.status='';
+        array.splice(0,3);
+        let expires=text.split('EXPIRES: ')[1];
+        if (expires!=undefined && expires !=null) expires=expires.replace(/\r/g, '');
+        icr.expires=expires;
+      }
+      else if (array[0]=='DURATION:') {
+        icr.duration=this.breakAndCombine(text.split('DURATION: ')[1].split("VERSION:")[0]).join(' ');
+        let version=text.split('VERSION: ')[1];
+        if (version!=undefined && version !=null) version=version.replace(/\r/g, '');
+        icr.version=version;
+      }
+      else if (array[0]=='FILE:') {
+        icr.file=array[1];
+        if (icr.file=='ROOT:') icr.file='';
+        let value=text.split('ROOT: ')[1];
+        if (value!=undefined && value !=null) value=value.replace(/\r/g, '');
+        icr.value=value;
+      }
+      else if (array[0]=='DESCRIPTION:') {
+        this.descriptionFlag=true;
+
+        let type=array[2];
+        if (type!=null && type!=undefined) {
+          type=type.replace(/\r/g, '');
+        }
+        switch(type) {
+          case 'File':
+            icr.type='G';
+            break;
+          case 'Routine':
+            icr.type='R';
+            break;
+          case 'Other':
+            icr.type='O';
+            break;
+          default:
+            icr.type='U';
+        }
+      }
+      else if (array[0]=='ROUTINE:') {
+        this.descriptionFlag=false;
+        icr.value=array[1];
+      }
+      else if (array[0]=='COMPONENT:') {
+        icr.tags.push(array[1]);
+      }
+      else if (this.descriptionFlag) {
+        icr.description.push(array.join(' '));
+      }
+    }
+    //add the last item to the ICR.
+    if (icr.id>0) {
+      icrList.push(icr.id.toString());
+      //icrs.push(icr); //push already created one, and then begin again.
+      icrs.push(icr);
+    }
+    let icrMaster:IcrMaster=new IcrMaster;
+    icrMaster.members=icrList;
+    icrMaster.id='IcrMaster';
+
+    this.icrService.uploadBulkIcrs(icrMaster, icrs);
+
+    return;
+  }
   getIcrs(): void {
     this.icrService.downloadIcrs().subscribe(
       data => {
-        this.rawData = data
-        this.processICR();
-
+        //this.rawData = data
+        //this.processICR();
+        this.icrs=data;
         this.filteredIcrs=this.icrs;
         this.pageLength=this.filteredIcrs.length;
-
         this.displayIcrCards();
         this.populateFieldList();
         this.guessFields()
       }
     );
   }
-
+  getCurrentIcrs():Array<Icr> {
+    console.log(this);
+    console.log(this.icrs);
+    return this.icrs;
+  }
+  compareAndInvalidate(newIcrs:Array<Icr>):void {
+    console.log('hi');
+  }
   populateFieldList():void {
     this.fieldList=[]; //empty out whatever is in the array.
 
@@ -215,6 +354,7 @@ export class IcrComponent implements OnInit {
         icr.validated=flag;
       }
     }
+
   }
 
   setPageSizeOptions(setPageSizeOptionsInput: string):void {

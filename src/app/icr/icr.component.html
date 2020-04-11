@@ -1,3 +1,15 @@
+<mat-toolbar color="primary">
+  <mat-toolbar-row>
+    <mat-icon>apps</mat-icon>
+    <h1>ICR Master</h1>
+    <span class="menu-spacer"></span>
+    <a mat-button (click)="openFileUpload()"> Upload Raw ICR </a>
+  </mat-toolbar-row>
+
+
+</mat-toolbar>
+<input type="file" id="upload_icr_input" style="display:none" (change)="handleFileInput($event.target.files)">
+
 <div class="main-search-form">
   <form style="width: 100%;">
     <mat-form-field id="dropdown-field">
@@ -82,7 +94,7 @@
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
           </table>
-          <div *ngIf="icr.tags.length>0">
+          <div *ngIf="icr.tags.length>0 && icr.type==='R'">
             <b *ngIf="icr.type==='R'">Tags</b>
             <div *ngFor="let tag of icr.tags">
               {{tag}}
