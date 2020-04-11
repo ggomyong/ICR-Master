@@ -5,6 +5,11 @@ import {Icr} from './icr';
 import { Observable, throwError } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
 
+export class IcrMaster{
+  id:string;
+  members:Array<string>;
+}
+
 @Injectable()
 export class IcrService {
   icrUrl = '../../assets/Export_ICR.csv';
@@ -18,11 +23,18 @@ export class IcrService {
         catchError(this.handleError) // then handle the error
       );
   }
-
+  public downloadIcrs() {
+    return this.http.get <Icr[]>('/api/download')
+      .pipe(
+        retry(3), // retry a failed request up to 3 times
+        catchError(this.handleError) // then handle the error
+      );
+  }
   public parseAndSaveIcr(texts:Array<string>) {
     //Try to parse the raw ICRs into meaning JSON objects.
     let icr:Icr=new Icr();
     let icrs:Array<Icr>=[];
+    let icrList:Array<string>=[];
 
     for (let text of texts) {
       let array=this.breakAndCombine(text);
@@ -30,7 +42,9 @@ export class IcrService {
 
       if (text.includes('NAME: ')) {
         if (icr.id>0) {
-          icrs.push(icr); //push already created one, and then begin again.
+          //icrs.push(icr); //push already created one, and then begin again.
+          icrList.push(icr.id.toString());
+          icrs.push(icr);
         }
         icr=new Icr(); //and then, start a new ICR instance
         icr.id=Number(array[0]);
@@ -90,7 +104,28 @@ export class IcrService {
         icr.description.push(array.join(' '));
       }
     }
-    return this.http.post('/api/upload', icrs)
+    //add the last item to the ICR.
+    if (icr.id>0) {
+      icrList.push(icr.id.toString());
+      //icrs.push(icr); //push already created one, and then begin again.
+      icrs.push(icr);
+    }
+    let icrMaster:IcrMaster=new IcrMaster;
+    icrMaster.members=icrList;
+    icrMaster.id='IcrMaster';
+
+    this.http.post('/api/upload', icrMaster).pipe(
+      retry(3), // retry a failed request up to 3 times
+      catchError(this.handleError) // then handle the error
+    )
+    .subscribe((response)=>{
+      console.log(response);
+    })
+
+    this.http.post('/api/bulkUpload', icrs).pipe(
+      retry(3), // retry a failed request up to 3 times
+      catchError(this.handleError) // then handle the error
+    )
     .subscribe((response)=>{
       console.log(response);
     })

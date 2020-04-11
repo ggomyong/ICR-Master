@@ -49,7 +49,7 @@ export class IcrComponent implements OnInit {
   }
 
   getIcrs(): void {
-    this.icrService.getIcrs().subscribe(
+    this.icrService.downloadIcrs().subscribe(
       data => {
         this.rawData = data
         this.processICR();
