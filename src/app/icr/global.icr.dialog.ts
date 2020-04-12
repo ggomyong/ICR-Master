@@ -37,7 +37,13 @@ export class IcrDialog implements OnInit {
     console.log(this.data);
   }
   onNoClick(): void {
-    this.dialogRef.close();
+    if (this.data.upload) {
+      this.dialogRef.close(this.data);
+    }
+    else {
+      this.dialogRef.close();
+    }
+
   }
   addARow(): void {
     let newField=new Field();

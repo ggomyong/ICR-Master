@@ -26,16 +26,22 @@ table {
   margin: 25px 25px 25px 25px;
 
   #dropdown-field {
-    width: 20%;
+    width: 15%;
   }
   #query-string {
-    width: 60%;
+    width: 50%;
   }
   #display-filter {
     width: 20%;
     .radio-option {
       right-margin: 5px;
     }
+  }
+  #dropdown-sort {
+    width: 10%;
+  }
+  #display-checkBox {
+    width: 15%;
   }
   #reset-button {
     margin-left: 10px;

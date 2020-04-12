@@ -35,7 +35,6 @@ export class Icr {
     this.description=[];
     this.tags=[];
     this.fields=[];
-    this.fieldIndex=[];
   }
 }
 

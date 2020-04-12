@@ -25,6 +25,8 @@ export class IcrComponent implements OnInit {
   private rawData: any;
 
   public icrs: Icr[]=[];
+  private invalidIcrs: Icr[]=[];
+
   public filteredIcrs: Icr[]=[];
 
   public pageSize:number  = 30;
@@ -39,9 +41,15 @@ export class IcrComponent implements OnInit {
   public displayFilter: string="B";
   public displayQuery: string="";
   public displayField: string="";
+  public displaySort: string="ICR #";
+
+  public hideInvalid: boolean=true;
+
   descriptionFlag=false;
 
   public fieldList: IcrField[] = [];
+  public sortBy: string[]=['Quality', 'ICR #', 'Status', 'Usage'];
+
   displayedColumns: string[] = ['file', 'value', 'direction', 'method'];
   public constructor(private icrService: IcrService, public dialog: MatDialog) { }
    ngOnInit(): void {
@@ -145,7 +153,7 @@ export class IcrComponent implements OnInit {
       let array=this.breakAndCombine(text);
       let descriptionFlag=false;
 
-      if (array[1]=='NAME:') {
+      if (!this.descriptionFlag && array[1]=='NAME:') {
         if (icr.id>0) {
           //icrs.push(icr); //push already created one, and then begin again.
           icrList.push(icr.id.toString());
@@ -166,47 +174,47 @@ export class IcrComponent implements OnInit {
         if (name!=undefined && name !=null) name=name.replace(/\r/g, '');
         icr.name=name;
       }
-      else if (array[0]=='CUSTODIAL' && array[1]=='PACKAGE:') {
+      else if (!this.descriptionFlag && array[0]=='CUSTODIAL' && array[1]=='PACKAGE:') {
         array.splice(0,2);
         let custodialPackage=array.join(' ');
         if (custodialPackage!=undefined && custodialPackage !=null) custodialPackage=custodialPackage.replace(/\r/g, '');
         icr.custodialPackage=custodialPackage;
       }
-      else if (array[0]=='SUBSCRIBING' && array[1]=='PACKAGE:') {
+      else if (!this.descriptionFlag && array[0]=='SUBSCRIBING' && array[1]=='PACKAGE:') {
         array.splice(0,2);
         let subscribingPackage=array.join(' ');
         if (subscribingPackage!=undefined && subscribingPackage !=null) subscribingPackage=subscribingPackage.replace(/\r/g, '');
         icr.subscribingPackage=subscribingPackage;
       }
-      else if (array[0]=='USAGE:') {
+      else if (!this.descriptionFlag && array[0]=='USAGE:') {
         icr.usage=array[1];
         array.splice(0,3);
         let entered=text.split('ENTERED: ')[1];
         if (entered!=undefined && entered !=null) entered=entered.replace(/\r/g, '');
         icr.entered=entered;
       }
-      else if (array[0]=='STATUS:') {
-        icr.status=array[1];
+      else if (!this.descriptionFlag && array[0]=='STATUS:') {
+        icr.status=this.breakAndCombine(text.split('STATUS: ')[1].split("EXPIRES:")[0]).join(' ');
         if (icr.status=='EXPIRES:') icr.status='';
         array.splice(0,3);
         let expires=text.split('EXPIRES: ')[1];
         if (expires!=undefined && expires !=null) expires=expires.replace(/\r/g, '');
         icr.expires=expires;
       }
-      else if (array[0]=='DURATION:') {
+      else if (!this.descriptionFlag && array[0]=='DURATION:') {
         icr.duration=this.breakAndCombine(text.split('DURATION: ')[1].split("VERSION:")[0]).join(' ');
         let version=text.split('VERSION: ')[1];
         if (version!=undefined && version !=null) version=version.replace(/\r/g, '');
         icr.version=version;
       }
-      else if (array[0]=='FILE:') {
+      else if (!this.descriptionFlag && array[0]=='FILE:') {
         icr.file=array[1];
         if (icr.file=='ROOT:') icr.file='';
         let value=text.split('ROOT: ')[1];
         if (value!=undefined && value !=null) value=value.replace(/\r/g, '');
         icr.value=value;
       }
-      else if (array[0]=='DESCRIPTION:') {
+      else if (!this.descriptionFlag && array[0]=='DESCRIPTION:') {
         this.descriptionFlag=true;
 
         let type=array[2];
@@ -227,14 +235,14 @@ export class IcrComponent implements OnInit {
             icr.type='U';
         }
       }
-      else if (array[0]=='ROUTINE:') {
+      else if (this.descriptionFlag && array[0]=='ROUTINE:') {
         this.descriptionFlag=false;
         if (array[1]!=undefined && array[1].length>0 && icr.type==='R') {
           icr.value=array[1];
         }
         if (icr.id==7) console.log(icr.value);
       }
-      else if (array[0]=='COMPONENT:') {
+      else if (!this.descriptionFlag && array[0]=='COMPONENT:') {
         icr.tags.push(array[1]);
       }
       else if (this.descriptionFlag) {
@@ -267,11 +275,11 @@ export class IcrComponent implements OnInit {
         //this.rawData = data
         //this.processICR();
         this.icrs=data;
+        this.initialProcess();
         this.filteredIcrs=this.icrs;
         this.pageLength=this.filteredIcrs.length;
         this.displayIcrCards();
         this.populateFieldList();
-        this.guessFields()
       }
     );
   }
@@ -396,6 +404,7 @@ export class IcrComponent implements OnInit {
   displayIcrCards():void {
     this.pageIcrs=[]; //clear out existing displaying cards
     this.pageLength=this.filteredIcrs.length;
+
     /*if (this.filteredIcrs.length==0) {
       this.filterChange({value: this.displayFilter});
     }*/
@@ -445,7 +454,7 @@ export class IcrComponent implements OnInit {
       this.pageSizeOptions = setPageSizeOptionsInput.split(',').map(str => +str);
     }
   }
-
+/*
   processICR(): void {
     let tempArray = new Array();
     tempArray=this.rawData.split('\n');
@@ -472,7 +481,6 @@ export class IcrComponent implements OnInit {
       tempIcr.description=tempDesc.split('\\n');
       tempIcr.validated=(tempIcr.type=='R' ? true: false);
       tempIcr.fields=[];
-      tempIcr.fieldIndex=[];
 
       tempIcr.tags=new Array();
       for (let i=6; i<dataline.length; i++) {
@@ -483,7 +491,7 @@ export class IcrComponent implements OnInit {
     }
 
   }
-
+*/
 isNumeric(val):boolean {
     if (val=='') return false;
     var _val = +val;
@@ -492,12 +500,39 @@ isNumeric(val):boolean {
         && (typeof val !== 'object'); //Array/object check
   }
 
+  checkBoxChange():void {
+    this.resetQuery();
 
+    if (this.hideInvalid) {
+      for (let [index,icr] of this.filteredIcrs.entries()) {
+        if (icr.status.toLowerCase()=='withdrawn' || icr.status.toLowerCase()=='retired') {
+          this.filteredIcrs.splice(index,1);
+          //this.invalidIcrs.push(icr);
+        }
+      }
+    }
+    else {
+      for (let icr of this.invalidIcrs) {
+        this.filteredIcrs.push(icr);
+      }
+    }
+  }
 
-  guessFields():void {
+  initialProcess():void {
     let keyWords=['both','r/w', 'fileman', 'direct', 'read', '& w'];
     // Loop through and for each of global ICR, guess its fields only if it's unvalidated.
-    for (let icr of this.icrs) {
+
+    for (let i = this.icrs.length - 1; i >= 0; i--) {
+      let icr=this.icrs[i];
+      if (icr.status.toLowerCase()==='withdrawn' || icr.status.toLowerCase()==='retired' || icr.status.toLowerCase()==='expired' || (icr.expires!=null && icr.expires!=undefined && icr.expires.length>0)) {
+        this.invalidIcrs.push(this.icrs[i]);
+        this.icrs.splice(i,1);
+      }
+    }
+
+    for (let [index,icr] of this.icrs.entries()) {
+      // Make sure that withdrawn and retired ICRs do not displaying
+      // Generate list of fields by guesstimate...
       if (icr.type==='G') {
         if (icr.fields.length>0) {
           continue;
@@ -546,19 +581,14 @@ isNumeric(val):boolean {
 
                 let hash=fileNumber.toString()+'^'+value.toString();
 
-                if (!icr.fieldIndex.includes(hash)) {
-                  let newField:Field={
-                    file: Number(fileNumber),
-                    value: value,
-                    direction: direction,
-                    method: method
-                  };
+                let newField:Field={
+                  file: Number(fileNumber),
+                  value: value,
+                  direction: direction,
+                  method: method
+                };
 
-                  icr.fields.push(newField);
-                  icr.fieldIndex.push(hash);
-                }
-
-
+                icr.fields.push(newField);
               }
             }
             //Not a number, but we could check for cross-reference
@@ -579,16 +609,14 @@ isNumeric(val):boolean {
                 let value=x;
                 let direction='Read';
                 let hash=fileNumber.toString()+'^'+value.toString();
-                if (!icr.fieldIndex.includes(hash)) {
-                  let newField:Field={
-                    file: Number(fileNumber),
-                    value: value,
-                    direction: direction,
-                    method: 'Direct'
-                  };
-                  icr.fields.push(newField);
-                  icr.fieldIndex.push(hash);
-                }
+
+                let newField:Field={
+                  file: Number(fileNumber),
+                  value: value,
+                  direction: direction,
+                  method: 'Direct'
+                };
+                icr.fields.push(newField);
               }
               counter++;
             }
@@ -624,14 +652,99 @@ isNumeric(val):boolean {
     }
     return comparison;
   }
-
+/*
+  sortIcr(event) {
+    console.log(event);
+    this.displaySort=event.value;
+    this.filteredIcrs.sort(this.compareForSortForIcr);
+  }
+  includeAllField(flds:Field[]) {
+    for (let fld of flds) {
+      if (fld.value=='*') return true;
+    }
+    return false;
+  }
+  compareForSortForIcr(a:Icr, b:Icr):number {
+    let comparison=0;
+    if (this.displaySort=='Quality') {
+      if (this.displayFilter=='R') {
+        if (a.tags.includes('*') && b.tags.includes('*')) {
+          comparison=0;
+          return comparison;
+        }
+        if (a.tags.includes('*')) {
+          comparison=1;
+        }
+        if (b.tags.includes('*')) {
+          comparison=-1;
+        }
+        if (a.tags.length>b.tags.length) {
+          comparison=1;
+        }
+        else if (a.tags.length<b.tags.length) {
+          comparison=-1;
+        }
+        return comparison;
+      }
+      else if (this.displayFilter=='G') {
+        if (this.includeAllField(a.fields) && this.includeAllField(b.fields)) {
+          comparison=0;
+          return comparison;
+        }
+        if (this.includeAllField(a.fields)) {
+          comparison=1;
+        }
+        if (this.includeAllField(b.fields)) {
+          comparison=-1;
+        }
+        if (a.fields.length>b.fields.length) {
+          comparison=1;
+        }
+        else if (a.fields.length<b.fields.length) {
+          comparison=-1;
+        }
+        return comparison;
+      }
+      else {
+        return comparison;
+      }
+    }
+    else if (this.displaySort=='Icr #') {
+      if (a.id>b.id) {
+        comparison=1;
+      }
+      if (a.id<b.id) {
+        comparison=-1;
+      }
+      return comparison;
+    }
+    else if (this.displaySort=='Status') {
+      if (a.status>b.status){
+        comparison=1;
+      }
+      else if (b.status>a.status) {
+        comparison=-1;
+      }
+      return comparison;
+    }
+    else if (this.displaySort=='Usage') {
+      if (a.usage>b.usage){
+        comparison=1;
+      }
+      else if (b.usage>a.usage) {
+        comparison=-1;
+      }
+    }
+    return comparison;
+  }*/
   onEditDialog(icr:Icr): void {
     const dialogRef = this.dialog.open(IcrDialog, {
-      width: '800px',
+      width: '650px',
       data: {
         icr: icr,
         upload: false
-      }
+      },
+      disableClose: true
     });
 
     dialogRef.afterClosed().subscribe(result => {

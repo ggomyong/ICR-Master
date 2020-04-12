@@ -27,11 +27,20 @@
         </button>
     </mat-form-field>
 
+    <!--mat-form-field id="dropdown-sort">
+      <mat-select required [(ngModel)]="displaySort" [ngModelOptions]="{standalone: true}" (selectionChange)="sortIcr($event)">
+        <mat-option *ngFor="let sort of sortBy" [value]="sort">{{sort}}</mat-option>
+      </mat-select>
+      <mat-label>Sort by</mat-label>
+    </mat-form-field-->
+
     <mat-radio-group name="displayFilter" [(ngModel)]="displayFilter" [ngModelOptions]="{standalone: true}" id="display-filter" aria-label="Select an option">
       <mat-radio-button class="radio-option" value="B" checked (change)="filterChange($event)">All&nbsp;</mat-radio-button>
       <mat-radio-button class="radio-option" value="G" (change)="filterChange($event)">Global&nbsp;</mat-radio-button>
       <mat-radio-button class="radio-option" value="R" (change)="filterChange($event)">Routine&nbsp;</mat-radio-button>
     </mat-radio-group>
+
+    <mat-checkbox name="display-checkBox" style="margin-left: 5px;" (change)="checkBoxChange()" [(ngModel)]="hideInvalid">No RETIRED/WITHDRAWN</mat-checkbox>
   </form>
 </div>
 
