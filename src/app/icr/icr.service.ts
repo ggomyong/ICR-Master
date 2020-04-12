@@ -24,6 +24,15 @@ export class IcrService {
         catchError(this.handleError) // then handle the error
       );
   }
+
+  public getIcr(id:string) {
+    return this.http.get <Icr>('/api/getIcr?id='+id)
+      .pipe(
+        retry(3), // retry a failed request up to 3 times
+        catchError(this.handleError) // then handle the error
+      );
+  }
+
   public downloadIcrs() {
     return this.http.get <Icr[]>('/api/download')
       .pipe(
@@ -33,7 +42,12 @@ export class IcrService {
   }
 
   public uploadIcr(icr:Icr) {
-
+    return this.http.post('/api/upload', icr).pipe(
+      retry(3), // retry a failed request up to 3 times
+      catchError(this.handleError) // then handle the error
+    ) .subscribe((response)=>{
+      console.log(response);
+    });
   }
 
   public uploadBulkIcrs(icrMaster:IcrMaster, icrs:Array<Icr>) {

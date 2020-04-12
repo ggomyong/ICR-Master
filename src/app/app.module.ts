@@ -43,6 +43,7 @@ import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatTreeModule} from '@angular/material/tree';
 import {IcrComponent} from './icr/icr.component';
+import {IcrDialog} from './icr/global.icr.dialog';
 import { MaterialFileInputModule } from 'ngx-material-file-input';
 import {MAT_DIALOG_DATA} from '@angular/material/dialog';
 
@@ -50,7 +51,8 @@ import {MAT_DIALOG_DATA} from '@angular/material/dialog';
 @NgModule({
   declarations: [
     AppComponent,
-    IcrComponent
+    IcrComponent,
+    IcrDialog
   ],
   imports: [
     BrowserModule,

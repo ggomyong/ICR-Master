@@ -45,16 +45,21 @@
   <mat-grid-tile *ngFor="let icr of pageIcrs" >
     <mat-card class="icr-card" style="margin-top:10px;">
       <mat-card-header>
-        <mat-icon *ngIf="icr.validated" mat-card-avatar>done_outline</mat-icon>
-        <mat-icon *ngIf="!icr.validated" mat-card-avatar>warning</mat-icon>
+        <mat-icon *ngIf="icr.validated" mat-card-avatar matTooltip="Validated">done_outline</mat-icon>
+        <mat-icon *ngIf="!icr.validated" mat-card-avatar matTooltip="Not validated">warning</mat-icon>
         <mat-card-title>
           {{icr.id}}&nbsp;-&nbsp;{{icr.value}}
           <span *ngIf="icr.type==='G'">
             &nbsp;(File #{{icr.file}})
           </span>
+
         </mat-card-title>
         <mat-card-subtitle>
-        {{icr.name}}
+          <mat-chip-list>
+            <mat-chip *ngIf="icr.status.length>0" color="accent" selected matTooltip="Status">{{icr.status}}</mat-chip>
+            <mat-chip *ngIf="icr.usage.length>0" color="primary" selected matTooltip="Usage">{{icr.usage}}</mat-chip>
+            <mat-chip *ngIf="icr.duration.length>0" matTooltip="Duration">{{icr.duration}}</mat-chip>
+          </mat-chip-list>
         </mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
@@ -66,7 +71,7 @@
         </div>
         <div class="icr-components">
           <b *ngIf="icr.type==='G'">Fields</b>
-          <table *ngIf="icr.fields.length>0" mat-table [dataSource]="icr.fields" class="mat-elevation-z8">
+          <table #fieldTable *ngIf="icr.fields.length>0" mat-table [dataSource]="icr.fields" class="mat-elevation-z8">
             <!-- Position Column -->
             <ng-container matColumnDef="file">
               <th mat-header-cell *matHeaderCellDef> File </th>

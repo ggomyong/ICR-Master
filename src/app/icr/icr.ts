@@ -44,4 +44,10 @@ export class Field {
   value: string;
   direction: string;
   method: string;
+  public constructor() {
+    this.file=-1
+    this.value='';
+    this.direction='';
+    this.method='';
+  }
 }

@@ -1,1 +1,132 @@
-{{dataSource}}
+
+
+
+<div class="row">
+  <div class="column">
+
+    <h1 mat-dialog-title>
+      <mat-icon *ngIf="data.icr.validated" mat-card-avatar matTooltip="Validated">done_outline</mat-icon>
+      <mat-icon *ngIf="!data.icr.validated" mat-card-avatar matTooltip="Not validated">warning</mat-icon>
+      {{data.icr.id}} - {{data.icr.value}}</h1>
+  </div>
+  <div class="column" style="text-align: right;">
+    <mat-chip-list>
+      <mat-chip *ngIf="data.icr.status.length>0" color="accent" selected matTooltip="Status">{{data.icr.status}}</mat-chip>
+      <mat-chip *ngIf="data.icr.usage.length>0" color="primary" selected matTooltip="Usage">{{data.icr.usage}}</mat-chip>
+      <mat-chip *ngIf="data.icr.duration.length>0" matTooltip="Duration">{{data.icr.duration}}</mat-chip>
+    </mat-chip-list>
+  </div>
+</div>
+<h3>{{data.icr.name}}</h3>
+<div mat-dialog-content class="container">
+  <div class="row">
+    <div class="column">
+      <label><b>CUSTODIAL PACKAGE:</b></label> {{data.icr.custodialPackage}}
+    </div>
+    <div class="column">
+      <label><b>SUBSCRIBING PACKAGE:</b></label> {{data.icr.subscribingPackage}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="column">
+      <label><b>USAGE:</b></label> {{data.icr.usage}}
+    </div>
+    <div class="column">
+      <label><b>ENTERED:</b></label> {{data.icr.entered}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="column">
+      <label><b>STATUS:</b></label> {{data.icr.status}}
+    </div>
+    <div class="column">
+      <label><b>EXPIRES:</b></label> {{data.icr.expires}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="column">
+      <label><b>DURATION:</b></label> {{data.icr.duration}}
+    </div>
+    <div class="column">
+      <label><b>VERSION:</b></label> {{data.icr.version}}
+    </div>
+  </div>
+  <div *ngIf="data.icr.type==='G'" class="row">
+    <div class="column">
+      <label><b>File:</b></label> {{data.icr.file}}
+    </div>
+    <div class="column">
+      <label><b>Root:</b></label> {{data.icr.value}}
+    </div>
+  </div>
+  <div *ngIf="data.icr.description.length>0">
+    <label><b>Description:</b></label>
+    <p *ngFor="let descr of data.icr.description">{{descr}}</p>
+  </div>
+  <div *ngIf="data.icr.type==='R' && data.icr.tags.length>0">
+    <label><b>Tags:</b></label>
+    <p *ngFor="let tag of data.icr.tags">{{tag}}</p>
+  </div>
+
+  <div *ngIf="data.icr.type==='G'">
+    <label><b>Fields:</b></label>
+    <button mat-icon-button (click)="addARow()"><mat-icon>control_point_rounded</mat-icon></button>
+    <table #table mat-table [dataSource]="data.icr.fields" class="mat-elevation-z8">
+      <!-- Position Column -->
+      <ng-container matColumnDef="file">
+        <th mat-header-cell *matHeaderCellDef> File </th>
+        <td mat-cell *matCellDef="let element; let j = index;">
+          <input matInput value="{{element.file}}" (change)="updateFile(j,$event.target.value)">
+        </td>
+      </ng-container>
+
+      <!-- Name Column -->
+      <ng-container matColumnDef="value">
+        <th mat-header-cell *matHeaderCellDef> Field/Index </th>
+        <td mat-cell *matCellDef="let element; let j = index;">
+          <input matInput value="{{element.value}}" (change)="updateField(j,$event.target.value)">
+        </td>
+      </ng-container>
+
+      <!-- Weight Column -->
+      <ng-container matColumnDef="direction">
+        <th mat-header-cell *matHeaderCellDef> Direction </th>
+        <td mat-cell *matCellDef="let element; let j = index;">
+          <mat-select value="{{element.direction}}" (selectionChange)="updateDirection(j,$event)">
+            <mat-option value="Read">Read</mat-option>
+            <mat-option value="Write">Write</mat-option>
+            <mat-option value="Both">Both</mat-option>
+          </mat-select>
+        </td>
+      </ng-container>
+
+      <!-- Symbol Column -->
+      <ng-container matColumnDef="method">
+        <th mat-header-cell *matHeaderCellDef> Method </th>
+        <td mat-cell *matCellDef="let element; let j = index;">
+          <mat-select value="{{element.method}}" (selectionChange)="updateMethod(j,$event)">
+            <mat-option value="Fileman">Fileman</mat-option>
+            <mat-option value="Direct">Direct</mat-option>
+          </mat-select>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="remove">
+        <th mat-header-cell *matHeaderCellDef> </th>
+        <td mat-cell *matCellDef="let element; let j = index;">
+          <button mat-icon-button (click)="removeRow(j)"><mat-icon>cancel_rounded</mat-icon></button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+</div>
+
+<div mat-dialog-actions>
+  <button *ngIf="data.icr.validated" mat-button (click)="onValidate(false)">Unvalidate</button>
+  <button *ngIf="!data.icr.validated" mat-button (click)="onValidate(true)">Validate</button>
+  <button mat-button (click)="updateFields()">Update</button>
+  <button mat-button (click)="onNoClick()">Discard Changes</button>
+</div>

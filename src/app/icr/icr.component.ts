@@ -7,9 +7,9 @@ import {Field} from './icr';
 import {IcrField} from './icr-field';
 import { MaterialFileInputModule } from 'ngx-material-file-input';
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatTableDataSource, MatTable } from '@angular/material/table';
 import {Injectable} from '@angular/core';
-
+import {IcrDialog} from './global.icr.dialog';
 @Component({
   selector: 'tos-icr',
   providers: [IcrService],
@@ -18,6 +18,7 @@ import {Injectable} from '@angular/core';
 })
 export class IcrComponent implements OnInit {
   @ViewChild('paginator') paginator: MatPaginator;
+  @ViewChild('fieldTable') table: MatTable<Element>;
 
   private error: any;
   private headers: string[];
@@ -73,6 +74,68 @@ export class IcrComponent implements OnInit {
     return returnable;
   }
 
+  /* Get an ICR by ID */
+  public getIcrById(id:number):Icr {
+    for (let icr of this.icrs) {
+      if (icr.id===id) return icr;
+    }
+    return null;
+  }
+
+  /* Compare two ICRs and see if it's been isIcrUpdated
+   * Assumption is that the ICR is updated, if one of the following is method
+   * 1. Status changes.
+   * 2. Expires changes.
+   * 3. Usage changes.
+   * 4. Duration changes.
+   * 5. File changes.
+   * 6. Value changes (Root or Routine).
+   * 7. Type changes
+   * 8. Description changes
+   */
+  public isIcrUpdated(one:Icr, two:Icr):boolean {
+    if (one == null || one==undefined || two==null || two==undefined) return false;
+    if (one.status != two.status) {
+      console.log('status diff');
+      return true;
+    }
+    if (one.expires != two.expires) {
+      console.log('expires diff');
+      return true;
+    }
+    if (one.usage != two.usage) {
+      console.log('usage diff');
+      return true;
+    }
+    if (one.duration != two.duration)  {
+      console.log('duration diff');
+      return true;
+    }/*
+    if (one.file != two.file)  {
+      console.log('file diff');
+      return true;
+    }
+    if (one.value != two.value) {
+      console.log('value diff');
+      return true;
+    }*/
+    if (one.type != two.type) {
+      console.log('type diff');
+      return true;
+    }
+    if (one.description.length != two.description.length)  {
+      console.log('description length diff');
+      return true;
+    }
+    for (let i=0; i<one.description.length; i++) {
+      if (one.description[i] != two.description[i])  {
+        console.log('description '+i+' diff');
+        return true;
+      }
+    }
+    return false;
+  }
+
   public handleBulkUpload(texts:Array<string>) {
     let icr:Icr=new Icr();
     let icrs:Array<Icr>=[];
@@ -86,6 +149,14 @@ export class IcrComponent implements OnInit {
         if (icr.id>0) {
           //icrs.push(icr); //push already created one, and then begin again.
           icrList.push(icr.id.toString());
+          if (this.isIcrUpdated(icr,this.getIcrById(icr.id))) {
+            icr.validated=false;
+            //console.log(console.log(JSON.stringify(this.getIcrById(icr.id))));
+          }
+          else if (this.getIcrById(icr.id)!=null) {
+            icr=this.getIcrById(icr.id);
+          }
+
           icrs.push(icr);
         }
         icr=new Icr(); //and then, start a new ICR instance
@@ -158,7 +229,10 @@ export class IcrComponent implements OnInit {
       }
       else if (array[0]=='ROUTINE:') {
         this.descriptionFlag=false;
-        icr.value=array[1];
+        if (array[1]!=undefined && array[1].length>0 && icr.type==='R') {
+          icr.value=array[1];
+        }
+        if (icr.id==7) console.log(icr.value);
       }
       else if (array[0]=='COMPONENT:') {
         icr.tags.push(array[1]);
@@ -171,14 +245,20 @@ export class IcrComponent implements OnInit {
     if (icr.id>0) {
       icrList.push(icr.id.toString());
       //icrs.push(icr); //push already created one, and then begin again.
+      if (this.getIcrById(icr.id)!=null && this.isIcrUpdated(icr,this.getIcrById(icr.id))) {
+        icr.validated=false;
+        //console.log(console.log(JSON.stringify(this.getIcrById(icr.id))));
+      }
+      else if (this.getIcrById(icr.id)!=null) {
+        icr=this.getIcrById(icr.id);
+      }
       icrs.push(icr);
     }
     let icrMaster:IcrMaster=new IcrMaster;
     icrMaster.members=icrList;
     icrMaster.id='IcrMaster';
-
     this.icrService.uploadBulkIcrs(icrMaster, icrs);
-
+    //this.ngOnInit();
     return;
   }
   getIcrs(): void {
@@ -196,12 +276,7 @@ export class IcrComponent implements OnInit {
     );
   }
   getCurrentIcrs():Array<Icr> {
-    console.log(this);
-    console.log(this.icrs);
     return this.icrs;
-  }
-  compareAndInvalidate(newIcrs:Array<Icr>):void {
-    console.log('hi');
   }
   populateFieldList():void {
     this.fieldList=[]; //empty out whatever is in the array.
@@ -294,6 +369,7 @@ export class IcrComponent implements OnInit {
           }
           break;
         case 'val':
+          if (this.filteredIcrs[i].value==undefined || this.filteredIcrs[i].value==null) break;
           if (this.filteredIcrs[i].value.toLowerCase().includes(this.displayQuery.toLowerCase())) {
             tempIcrs.push(this.filteredIcrs[i]);
           }
@@ -341,12 +417,19 @@ export class IcrComponent implements OnInit {
     if (event.key=='Enter') {
       this.queryChange();
     }
+    else if (event.key=='Escape') {
+      this.displayQuery='';
+      this.queryChange();
+    }
   }
 
   onValidate(target, flag):void {
+    let targetIcr:Icr=new Icr();
+
     for (let icr of this.icrs) {
       if (icr.id===target.id) {
         icr.validated=flag;
+        targetIcr=icr;
       }
     }
     for (let icr of this.filteredIcrs) {
@@ -354,7 +437,7 @@ export class IcrComponent implements OnInit {
         icr.validated=flag;
       }
     }
-
+    this.icrService.uploadIcr(targetIcr);
   }
 
   setPageSizeOptions(setPageSizeOptionsInput: string):void {
@@ -416,6 +499,12 @@ isNumeric(val):boolean {
     // Loop through and for each of global ICR, guess its fields only if it's unvalidated.
     for (let icr of this.icrs) {
       if (icr.type==='G') {
+        if (icr.fields.length>0) {
+          continue;
+        }
+        if  (icr.description.length==0) {
+          continue;
+        }
         if (!icr.validated) {
           //Loop through description array, we're looking for a line that starts with a number
           // and has verbiages such as Direct, Fileman, and/or Read.
@@ -504,19 +593,11 @@ isNumeric(val):boolean {
               counter++;
             }
           }
-          icr.fields.sort(function (a, b) {
-            let x=a.value;
-            let y=b.value;
+          if (icr.fields.length>0) {
+            icr.fields.sort(this.compareForSortForField);
+            this.icrService.uploadIcr(icr);
+          }
 
-            let comparison=0;
-            if (x>y) {
-              return 1;
-            }
-            else if (x<y) {
-              return -1;
-            }
-            return 0;
-          });
         }
       }
       else {
@@ -525,35 +606,51 @@ isNumeric(val):boolean {
     }
   }
 
+  compareForSortForField(a:Field, b:Field):number {
+    let comparison = 0;
+    if (a.file>b.file) {
+      comparison=1;
+    }
+    else if (a.file<b.file) {
+      comparison=-1;
+    }
+    if (comparison==0) {
+      if (a.value>b.value) {
+        comparison=1;
+      }
+      else if (a.value<b.value) {
+        comparison=-1;
+      }
+    }
+    return comparison;
+  }
+
   onEditDialog(icr:Icr): void {
     const dialogRef = this.dialog.open(IcrDialog, {
-      width: '250px',
-      data: icr.fields
+      width: '800px',
+      data: {
+        icr: icr,
+        upload: false
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
+      if (result==null || result==undefined) return;
+
+      if (result.upload) {
+        icr=result;
+      }
+      else {
+        this.icrService.getIcr(icr.id.toString()).subscribe(
+          data=>{
+            icr=data;
+            this.table.renderRows();
+          }
+        );
+
+      }
+      this.table.renderRows();
       console.log('The dialog was closed');
     });
   }
-}
-
-@Component({
-  selector: 'icr-dialog',
-  templateUrl: 'global.icr.dialog.html',
-})
-export class IcrDialog implements OnInit {
-  displayedColumns: string[] = ['file', 'value', 'direction', 'method'];
-  dataSource: MatTableDataSource<Field>;
-
-  constructor(public dialogRef: MatDialogRef<IcrDialog>,@Inject(MAT_DIALOG_DATA) public data: Array<Field>) {
-
-  }
-  ngOnInit() {
-    console.log(this.data);
-    this.dataSource= new MatTableDataSource(this.data);
-  }
-  onNoClick(): void {
-    this.dialogRef.close();
-  }
-
 }
