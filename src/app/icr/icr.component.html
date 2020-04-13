@@ -5,9 +5,8 @@
     <span class="menu-spacer"></span>
     <a mat-button (click)="openFileUpload()"> Upload Raw ICR </a>
   </mat-toolbar-row>
-
-
 </mat-toolbar>
+
 <input type="file" id="upload_icr_input" style="display:none" (change)="handleFileInput($event.target.files)">
 
 <div class="main-search-form">
@@ -44,11 +43,13 @@
   </form>
 </div>
 
-<mat-paginator #paginator [length]="pageLength"
+<mat-paginator *ngIf="!loading" #paginator [length]="pageLength"
                [pageSize]="pageSize"
                [pageSizeOptions]="pageSizeOptions"
                (page)="pageEvent = onPageChanged($event)">
 </mat-paginator>
+
+<mat-spinner class="loading-indicator" *ngIf="loading"></mat-spinner>
 
 <mat-grid-list cols="3">
   <mat-grid-tile *ngFor="let icr of pageIcrs" >
@@ -126,7 +127,7 @@
   </mat-grid-tile>
 </mat-grid-list>
 
-<mat-paginator #paginator [length]="pageLength"
+<mat-paginator *ngIf="!loading" #paginator [length]="pageLength"
                [pageSize]="pageSize"
                [pageSizeOptions]="pageSizeOptions"
                (page)="pageEvent = onPageChanged($event)">

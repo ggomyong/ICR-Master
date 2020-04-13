@@ -47,12 +47,15 @@ export class IcrComponent implements OnInit {
 
   descriptionFlag=false;
 
+  public loading:boolean=true;
+
   public fieldList: IcrField[] = [];
   public sortBy: string[]=['Quality', 'ICR #', 'Status', 'Usage'];
 
   displayedColumns: string[] = ['file', 'value', 'direction', 'method'];
   public constructor(private icrService: IcrService, public dialog: MatDialog) { }
    ngOnInit(): void {
+    this.loading=true;
     this.getIcrs();
   }
 
@@ -276,6 +279,7 @@ export class IcrComponent implements OnInit {
         //this.processICR();
         this.icrs=data;
         this.initialProcess();
+        this.loading=false;
         this.filteredIcrs=this.icrs;
         this.pageLength=this.filteredIcrs.length;
         this.displayIcrCards();
