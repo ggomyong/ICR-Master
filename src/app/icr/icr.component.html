@@ -121,7 +121,7 @@
       <mat-card-actions style="text-align: right;">
         <button mat-raised-button (click)="onEditDialog(icr)">View/Edit</button>
         <button *ngIf="!icr.validated" (click)="onValidate(icr,true)" mat-raised-button>Validate</button>
-        <button *ngIf="icr.validated" (click)="onValidate(icr,false)" mat-raised-button>Unvalidate</button>
+        <button *ngIf="icr.validated" (click)="onValidate(icr,false)" mat-raised-button>Invalidate</button>
       </mat-card-actions>
     </mat-card>
   </mat-grid-tile>

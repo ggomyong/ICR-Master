@@ -524,7 +524,7 @@ isNumeric(val):boolean {
 
   initialProcess():void {
     let keyWords=['both','r/w', 'fileman', 'direct', 'read', '& w'];
-    // Loop through and for each of global ICR, guess its fields only if it's unvalidated.
+    // Loop through and for each of global ICR, guess its fields only if it's invalidated.
 
     for (let i = this.icrs.length - 1; i >= 0; i--) {
       let icr=this.icrs[i];

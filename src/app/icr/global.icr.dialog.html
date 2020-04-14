@@ -122,7 +122,7 @@
 </div>
 
 <div mat-dialog-actions>
-  <button *ngIf="data.icr.validated" mat-button (click)="onValidate(false)">Unvalidate</button>
+  <button *ngIf="data.icr.validated" mat-button (click)="onValidate(false)">Invalidate</button>
   <button *ngIf="!data.icr.validated" mat-button (click)="onValidate(true)">Validate</button>
   <button mat-button (click)="updateFields()">Update</button>
   <button mat-button (click)="onNoClick()">Close</button>
