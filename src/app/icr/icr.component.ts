@@ -564,19 +564,19 @@ isNumeric(val):boolean {
           updateMe=true;
           console.log(1);
         }
-        for (let tag of icr.tags) {
-          if (tag.includes('$$')) {
-            tag=tag.split('$$')[1];
+        for (let i=0; i<this.icrs.tags.length; i++) {
+          if (this.icrs.tags[i].includes('$$')) {
+            this.icrs.tags[i]=this.icrs.tags[i].split('$$')[1];
             updateMe=true;
             console.log(2);
           }
-          if (tag.includes('(')) {
-            tag=tag.split('(')[0];
+          if (this.icrs.tags[i].includes('(')) {
+            this.icrs.tags[i]=this.icrs.tags[i].split('(')[0];
             updateMe=true;
             console.log(3);
           }
-          if (tag.includes('[')) {
-            tag=tag.split('[')[0];
+          if (this.icrs.tags[i].includes('[')) {
+            this.icrs.tags[i]=this.icrs.tags[i].split('[')[0];
             updateMe=true;
             console.log(4);
           }
