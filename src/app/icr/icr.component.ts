@@ -377,7 +377,7 @@ export class IcrComponent implements OnInit {
       this.displayIcrCards();
       return;
     }
-
+    let duplicateCheck=false;
     for (let i=0; i<this.filteredIcrs.length; i++) {
       descs=this.filteredIcrs[i].description.join('\n');
 
@@ -393,7 +393,7 @@ export class IcrComponent implements OnInit {
           }
           break;
         case 'valdesc':
-          let duplicateCheck=false;
+          duplicateCheck=false;
           if (this.filteredIcrs[i].value.toLowerCase().includes(this.displayQuery.toLowerCase()) || descs.toLowerCase().includes(this.displayQuery.toLowerCase())) {
             tempIcrs.push(this.filteredIcrs[i]);
             duplicateCheck=true;
@@ -405,7 +405,7 @@ export class IcrComponent implements OnInit {
           }
           break;
         case 'val':
-          let duplicateCheck=false;
+          duplicateCheck=false;
           if (this.filteredIcrs[i].value==undefined || this.filteredIcrs[i].value==null) break;
           if (this.filteredIcrs[i].value.toLowerCase().includes(this.displayQuery.toLowerCase())) {
             duplicateCheck=true;
