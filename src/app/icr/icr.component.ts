@@ -287,6 +287,7 @@ export class IcrComponent implements OnInit {
       }
     );
   }
+
   getCurrentIcrs():Array<Icr> {
     return this.icrs;
   }
@@ -537,7 +538,34 @@ isNumeric(val):boolean {
     for (let [index,icr] of this.icrs.entries()) {
       // Make sure that withdrawn and retired ICRs do not displaying
       // Generate list of fields by guesstimate...
-      if (icr.type==='G') {
+      if (icr.type==='R') {
+        // look at tags and get rid of $$ and () and []
+        // and auto validate routine ICRs
+        let updateMe=false;
+
+        if (!icr.validated) {
+          icr.validated=true;
+          updateMe=true;
+        }
+        for (let tag of icr.tags) {
+          if (tag.includes('$$')) {
+            tag=tag.split('$$')[1];
+            updateMe=true;
+          }
+          if (tag.includes('(')) {
+            tag=tag.split('(')[0];
+            updateMe=true;
+          }
+          if (tag.includes('[')) {
+            tag=tag.split('[')[0];
+            updateMe=true;
+          }
+          if (updateMe) {
+            this.icrService.uploadIcr(icr);
+          }
+        }
+      }
+      else if (icr.type==='G') {
         if (icr.fields.length>0) {
           continue;
         }
