@@ -363,6 +363,7 @@ export class IcrComponent implements OnInit {
       for (let icr of this.icrs) {
         if (icr.type==='R') {
           if (icr.value==undefined || icr.value==null) continue;
+          console.log(parts);
           if (icr.value.toLowerCase()===parts[0].toLowerCase()) {
             console.log(icr);
             for (let i=0; i<icr.tags.length; i++) {
