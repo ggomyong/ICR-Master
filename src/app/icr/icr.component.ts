@@ -393,21 +393,25 @@ export class IcrComponent implements OnInit {
           }
           break;
         case 'valdesc':
+          let duplicateCheck=false;
           if (this.filteredIcrs[i].value.toLowerCase().includes(this.displayQuery.toLowerCase()) || descs.toLowerCase().includes(this.displayQuery.toLowerCase())) {
             tempIcrs.push(this.filteredIcrs[i]);
+            duplicateCheck=true;
           }
-          if (this.filteredIcrs[i].type=='G') {
+          if (!duplicateCheck && this.filteredIcrs[i].type=='G') {
             if (this.filteredIcrs[i].file.includes(this.displayQuery.toLowerCase())) {
               tempIcrs.push(this.filteredIcrs[i]);
             }
           }
           break;
         case 'val':
+          let duplicateCheck=false;
           if (this.filteredIcrs[i].value==undefined || this.filteredIcrs[i].value==null) break;
           if (this.filteredIcrs[i].value.toLowerCase().includes(this.displayQuery.toLowerCase())) {
+            duplicateCheck=true;
             tempIcrs.push(this.filteredIcrs[i]);
           }
-          if (this.filteredIcrs[i].type=='G') {
+          if (!duplicateCheck && this.filteredIcrs[i].type=='G') {
             if (this.filteredIcrs[i].file.includes(this.displayQuery.toLowerCase())) {
               tempIcrs.push(this.filteredIcrs[i]);
             }
