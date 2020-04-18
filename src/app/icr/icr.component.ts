@@ -31,7 +31,8 @@ export class IcrComponent implements OnInit {
 
   public pageSize:number  = 30;
   public pageStart:number = 0;
-
+  public pageIndex:number=0
+  public previousPageIndex:number=0
   public pageSizeOptions: number[] = [15, 30, 60, 180, 600];
   public pageIcrs: Icr[]=[];
   public pageLength: number = 0;

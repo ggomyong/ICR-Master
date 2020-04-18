@@ -46,6 +46,8 @@
 <mat-paginator *ngIf="!loading" #paginator [length]="pageLength"
                [pageSize]="pageSize"
                [pageSizeOptions]="pageSizeOptions"
+               [pageIndex]="pageIndex"
+               [previousPageIndex]="previousPageIndex"
                (page)="pageEvent = onPageChanged($event)">
 </mat-paginator>
 
@@ -130,5 +132,7 @@
 <mat-paginator *ngIf="!loading" #paginator [length]="pageLength"
                [pageSize]="pageSize"
                [pageSizeOptions]="pageSizeOptions"
+               [pageIndex]="pageIndex"
+               [previousPageIndex]="previousPageIndex"
                (page)="pageEvent = onPageChanged($event)">
 </mat-paginator>
