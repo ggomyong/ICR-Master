@@ -562,19 +562,23 @@ isNumeric(val):boolean {
         if (!icr.validated) {
           icr.validated=true;
           updateMe=true;
+          console.log(1);
         }
         for (let tag of icr.tags) {
           if (tag.includes('$$')) {
             tag=tag.split('$$')[1];
             updateMe=true;
+            console.log(2);
           }
           if (tag.includes('(')) {
             tag=tag.split('(')[0];
             updateMe=true;
+            console.log(3);
           }
           if (tag.includes('[')) {
             tag=tag.split('[')[0];
             updateMe=true;
+            console.log(4);
           }
           if (updateMe) {
             this.icrService.uploadIcr(icr);
