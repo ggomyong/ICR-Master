@@ -357,6 +357,21 @@ export class IcrComponent implements OnInit {
       this.displayIcrCards();
     }
 
+    if (this.displayQuery.includes('^')) {
+      let parts=this.displayQuery.split('^');
+      this.filteredIcrs=[];
+      for (let icr of this.icrs) {
+        if (icr.type==='R') {
+          if (icr.value===parts[0]) {
+            if (icr.tags.includes(parts[1])) {
+              this.filteredIcrs.push(icr);
+            }
+          }
+        }
+      }
+      return;
+    }
+
     for (let i=0; i<this.filteredIcrs.length; i++) {
       descs=this.filteredIcrs[i].description.join('\n');
 
