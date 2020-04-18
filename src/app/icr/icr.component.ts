@@ -362,10 +362,12 @@ export class IcrComponent implements OnInit {
       this.filteredIcrs=[];
       for (let icr of this.icrs) {
         if (icr.type==='R') {
-          if (icr.value===parts[0]) {
+          if (icr.value.toLowerCase()===parts[0].toLowerCase()) {
             console.log(icr);
-            if (icr.tags.includes(parts[1])) {
-              this.filteredIcrs.push(icr);
+            for (let i=0; i<icr.tags.length; i++) {
+              if (icr.tags[i].toLowerCase().includes(parts[1].toLowerCase())) {
+                this.filteredIcrs.push(icr);
+              }
             }
           }
         }
@@ -562,7 +564,6 @@ isNumeric(val):boolean {
         if (!icr.validated) {
           icr.validated=true;
           updateMe=true;
-          console.log(1);
         }
         for (let i=0; i<icr.tags.length; i++) {
           if (icr.tags[i].includes('$$')) {
