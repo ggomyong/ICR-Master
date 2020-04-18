@@ -568,21 +568,18 @@ isNumeric(val):boolean {
           if (icr.tags[i].includes('$$')) {
             icr.tags[i]=icr.tags[i].split('$$')[1];
             updateMe=true;
-            console.log(2);
           }
           if (icr.tags[i].includes('(')) {
             icr.tags[i]=icr.tags[i].split('(')[0];
             updateMe=true;
-            console.log(3);
           }
           if (icr.tags[i].includes('[')) {
             icr.tags[i]=icr.tags[i].split('[')[0];
             updateMe=true;
-            console.log(4);
           }
-          if (updateMe) {
-            this.icrService.uploadIcr(icr);
-          }
+        }
+        if (updateMe) {
+          this.icrService.uploadIcr(icr);
         }
       }
       else if (icr.type==='G') {
