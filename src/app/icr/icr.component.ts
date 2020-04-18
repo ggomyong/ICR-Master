@@ -365,9 +365,6 @@ export class IcrComponent implements OnInit {
           if (icr.value==undefined || icr.value==null) continue;
           if (icr.value.toLowerCase()===parts[1].toLowerCase()) {
             for (let i=0; i<icr.tags.length; i++) {
-              console.log(icr.tags[i].toLowerCase());
-              console.log(parts[0].toLowerCase());
-              console.log(icr.tags[i].toLowerCase()==parts[0].toLowerCase());
               if (icr.tags[i].toLowerCase()==parts[0].toLowerCase()) {
                 this.filteredIcrs.push(icr);
                 break;
@@ -582,6 +579,10 @@ isNumeric(val):boolean {
           }
           if (icr.tags[i].includes('[')) {
             icr.tags[i]=icr.tags[i].split('[')[0];
+            updateMe=true;
+          }
+          if (icr.tags[i].includes('\r')) {
+            icr.tags[i]=icr.tags[i].split('\r').join('');
             updateMe=true;
           }
         }
