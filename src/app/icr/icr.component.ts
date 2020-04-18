@@ -363,6 +363,7 @@ export class IcrComponent implements OnInit {
       for (let icr of this.icrs) {
         if (icr.type==='R') {
           if (icr.value===parts[0]) {
+            console.log(icr);
             if (icr.tags.includes(parts[1])) {
               this.filteredIcrs.push(icr);
             }
