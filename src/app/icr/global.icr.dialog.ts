@@ -84,7 +84,7 @@ export class IcrDialog implements OnInit {
     let duplicateCheck=';';
 
     for (let [index,field] of this.data.icr.fields.entries()) {
-      if (field.file==null || field.file<1) {
+      if (field.file==null || isNaN(field.file)) {
         message='Invalid file number, '+ field.file+ ', at entry # ' + index;
         this.generateSnackBar(message, action);
         return false;
