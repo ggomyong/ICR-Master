@@ -556,7 +556,8 @@ isNumeric(val):boolean {
     for (let i = this.icrs.length - 1; i >= 0; i--) {
       let icr=this.icrs[i];
       //retired ICRs will not be considered as invalid
-      if (icr.status.toLowerCase()==='withdrawn' || icr.status.toLowerCase()==='expired' || (icr.expires!=null && icr.expires!=undefined && icr.expires.length>0)) {
+      //ICRs that have EXPIRES field wlil not be considered as invalid
+      if (icr.status.toLowerCase()==='withdrawn' || icr.status.toLowerCase()==='expired') {
         this.invalidIcrs.push(this.icrs[i]);
         this.icrs.splice(i,1);
       }
