@@ -536,7 +536,7 @@ isNumeric(val):boolean {
 
     if (this.hideInvalid) {
       for (let [index,icr] of this.filteredIcrs.entries()) {
-        if (icr.status.toLowerCase()=='withdrawn' || icr.status.toLowerCase()=='retired') {
+        if (icr.status.toLowerCase()=='withdrawn') { // || icr.status.toLowerCase()=='retired') {
           this.filteredIcrs.splice(index,1);
           //this.invalidIcrs.push(icr);
         }
@@ -555,7 +555,8 @@ isNumeric(val):boolean {
 
     for (let i = this.icrs.length - 1; i >= 0; i--) {
       let icr=this.icrs[i];
-      if (icr.status.toLowerCase()==='withdrawn' || icr.status.toLowerCase()==='retired' || icr.status.toLowerCase()==='expired' || (icr.expires!=null && icr.expires!=undefined && icr.expires.length>0)) {
+      //retired ICRs will not be considered as invalid
+      if (icr.status.toLowerCase()==='withdrawn' || icr.status.toLowerCase()==='expired' || (icr.expires!=null && icr.expires!=undefined && icr.expires.length>0)) {
         this.invalidIcrs.push(this.icrs[i]);
         this.icrs.splice(i,1);
       }
