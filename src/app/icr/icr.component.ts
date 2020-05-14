@@ -225,14 +225,15 @@ export class IcrComponent implements OnInit {
         if (type!=null && type!=undefined) {
           type=type.replace(/\r/g, '');
         }
-        switch(type) {
-          case 'File':
+        switch(type.toLowerCase()) {
+          case 'file':
             icr.type='G';
             break;
-          case 'Routine':
+          case 'remote procedure':
+          case 'routine':
             icr.type='R';
             break;
-          case 'Other':
+          case 'other':
             icr.type='O';
             break;
           default:
@@ -243,8 +244,13 @@ export class IcrComponent implements OnInit {
         this.descriptionFlag=false;
         if (array[1]!=undefined && array[1].length>0 && icr.type==='R') {
           icr.value=array[1];
+          if (array.length>2) {
+            icr.value=array[2];
+            icr.tags.push(array[1]);
+          }
         }
-        if (icr.id==7) console.log(icr.value);
+        //if (icr.id==7) console.log(icr.value);
+
       }
       else if (!this.descriptionFlag && array[0]=='COMPONENT:') {
         icr.tags.push(array[1]);
@@ -557,7 +563,7 @@ isNumeric(val):boolean {
       let icr=this.icrs[i];
       //retired ICRs will not be considered as invalid
       //ICRs that have EXPIRES field wlil not be considered as invalid
-      if (icr.status.toLowerCase()==='withdrawn' || icr.status.toLowerCase()==='expired') {
+      if (icr.status.toLowerCase()==='withdrawn' || icr.status.toLowerCase()==='expired' || icr.status.toLowerCase()==='retired') {
         this.invalidIcrs.push(this.icrs[i]);
         this.icrs.splice(i,1);
       }
