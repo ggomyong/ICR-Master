@@ -212,11 +212,13 @@ export class IcrComponent implements OnInit {
         icr.version=version;
       }
       else if (!this.descriptionFlag && array[0]=='FILE:' && array.includes('ROOT:')) {
+
         icr.file=array[1];
         if (icr.file=='ROOT:') icr.file='';
         let value=text.split('ROOT: ')[1];
         if (value!=undefined && value !=null) value=value.replace(/\r/g, '');
         icr.value=value;
+        if (icr.id==2383) console.log(icr);
       }
       else if (!this.descriptionFlag && array[0]=='DESCRIPTION:') {
         this.descriptionFlag=true;
