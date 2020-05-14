@@ -251,6 +251,7 @@ export class IcrComponent implements OnInit {
           icr.value=array[1];
           if (icr.id==5699) console.log(array);
           if (array.length>2 && array[2].length>0 && array[2]!='') {
+            console.log('wtf:'+array[2])
             icr.value=array[2].split('\r').join('');
             icr.tags.push(array[1]);
           }
