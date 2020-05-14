@@ -275,6 +275,7 @@ export class IcrComponent implements OnInit {
     let icrMaster:IcrMaster=new IcrMaster;
     icrMaster.members=icrList;
     icrMaster.id='IcrMaster';
+    console.log(icrs);
     this.icrService.uploadBulkIcrs(icrMaster, icrs);
     //this.ngOnInit();
     return;
