@@ -218,7 +218,7 @@ export class IcrComponent implements OnInit {
         let value=text.split('ROOT: ')[1];
         if (value!=undefined && value !=null) value=value.replace(/\r/g, '');
         icr.value=value;
-        if (icr.id==2383) console.log(icr);
+        if (icr.id==2383) console.log(array);
       }
       else if (!this.descriptionFlag && array[0]=='DESCRIPTION:') {
         this.descriptionFlag=true;
