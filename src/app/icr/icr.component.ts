@@ -230,6 +230,9 @@ export class IcrComponent implements OnInit {
             icr.type='G';
             break;
           case 'Remote Procedure':
+            icr.type='R';
+            console.log('remote procedure!');
+            break;
           case 'Routine':
             icr.type='R';
             break;
