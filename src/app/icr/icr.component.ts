@@ -211,7 +211,7 @@ export class IcrComponent implements OnInit {
         if (version!=undefined && version !=null) version=version.replace(/\r/g, '');
         icr.version=version;
       }
-      else if (!this.descriptionFlag && array[0]=='FILE:') {
+      else if (!this.descriptionFlag && array[0]=='FILE:' && array.includes('ROOT:')) {
         icr.file=array[1];
         if (icr.file=='ROOT:') icr.file='';
         let value=text.split('ROOT: ')[1];
