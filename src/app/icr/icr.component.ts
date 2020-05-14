@@ -218,7 +218,6 @@ export class IcrComponent implements OnInit {
         let value=text.split('ROOT: ')[1];
         if (value!=undefined && value !=null) value=value.replace(/\r/g, '');
         icr.value=value;
-        if (icr.id==2383) console.log(array);
       }
       else if (!this.descriptionFlag && array[0]=='DESCRIPTION:') {
         this.descriptionFlag=true;
@@ -566,7 +565,7 @@ isNumeric(val):boolean {
       let icr=this.icrs[i];
       //retired ICRs will not be considered as invalid
       //ICRs that have EXPIRES field wlil not be considered as invalid
-      if (icr.status.toLowerCase()==='withdrawn' || icr.status.toLowerCase()==='expired' || icr.status.toLowerCase()==='retired') {
+      if (icr.status.toLowerCase()==='withdrawn' || icr.status.toLowerCase()==='expired') {
         this.invalidIcrs.push(this.icrs[i]);
         this.icrs.splice(i,1);
       }
