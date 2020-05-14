@@ -225,15 +225,15 @@ export class IcrComponent implements OnInit {
         if (type!=null && type!=undefined) {
           type=type.replace(/\r/g, '');
         }
-        switch(type.toLowerCase()) {
-          case 'file':
+        switch(type) {
+          case 'File':
             icr.type='G';
             break;
-          case 'remote procedure':
-          case 'routine':
+          case 'Remote Procedure':
+          case 'Routine':
             icr.type='R';
             break;
-          case 'other':
+          case 'Other':
             icr.type='O';
             break;
           default:
