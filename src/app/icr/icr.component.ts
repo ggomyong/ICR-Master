@@ -107,6 +107,10 @@ export class IcrComponent implements OnInit {
    */
   public isIcrUpdated(one:Icr, two:Icr):boolean {
     if (one == null || one==undefined || two==null || two==undefined) return false;
+    if (one.value != two.value) {
+      console.log('value diff');
+      return true;
+    }
     if (one.status != two.status) {
       console.log('status diff');
       return true;
