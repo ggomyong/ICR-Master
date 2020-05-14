@@ -245,7 +245,7 @@ export class IcrComponent implements OnInit {
         if (array[1]!=undefined && array[1].length>0 && icr.type==='R') {
           icr.value=array[1];
           if (array.length>2) {
-            icr.value=array[2];
+            icr.value=array[2].split('\r').join('');
             icr.tags.push(array[1]);
           }
         }
@@ -582,12 +582,15 @@ isNumeric(val):boolean {
           icr.validated=true;
           updateMe=true;
         }
-
+        if (icr.value==undefined || icr.value==null) {
+          console.log(icr);
+          continue;
+        }
         if (icr.value.includes('\r')) {
           icr.value=icr.value.split('\r').join('');
           updateMe=true;
         }
-        
+
         for (let i=0; i<icr.tags.length; i++) {
           if (icr.tags[i].includes('$$')) {
             icr.tags[i]=icr.tags[i].split('$$')[1];
