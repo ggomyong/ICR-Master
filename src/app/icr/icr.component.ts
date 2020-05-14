@@ -249,10 +249,12 @@ export class IcrComponent implements OnInit {
         this.descriptionFlag=false;
         if (array[1]!=undefined && array[1].length>0 && icr.type==='R') {
           icr.value=array[1];
+          if (icr.id==5699) console.log(icr);
           if (array.length>2 && array[2].length>0) {
             icr.value=array[2].split('\r').join('');
             icr.tags.push(array[1]);
           }
+          if (icr.id==5699) console.log(icr);
         }
         //if (icr.id==7) console.log(icr.value);
 
