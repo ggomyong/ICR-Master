@@ -582,6 +582,12 @@ isNumeric(val):boolean {
           icr.validated=true;
           updateMe=true;
         }
+
+        if (icr.value.includes('\r')) {
+          icr.value=icr.value.split('\r').join('');
+          updateMe=true;
+        }
+        
         for (let i=0; i<icr.tags.length; i++) {
           if (icr.tags[i].includes('$$')) {
             icr.tags[i]=icr.tags[i].split('$$')[1];
