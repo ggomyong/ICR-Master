@@ -1,5 +1,5 @@
-import { Component, OnInit, Inject } from '@angular/core';
-import { ViewChild } from '@angular/core'
+import { Component, OnInit, Inject, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Observable } from 'rxjs';
 import {PageEvent, MatPaginatorModule, MatPaginator} from '@angular/material/paginator';
 import {IcrService, IcrMaster} from './icr.service';
 import {Icr} from './icr';
@@ -8,6 +8,8 @@ import {IcrField} from './icr-field';
 import { MaterialFileInputModule } from 'ngx-material-file-input';
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
 import { MatTableDataSource, MatTable } from '@angular/material/table';
+import {MatSortModule} from '@angular/material/sort';
+
 import {Injectable} from '@angular/core';
 import {IcrDialog} from './global.icr.dialog';
 @Component({
@@ -18,6 +20,8 @@ import {IcrDialog} from './global.icr.dialog';
 })
 export class IcrComponent implements OnInit {
   @ViewChild('paginator') paginator: MatPaginator;
+  obs: Observable<any>;
+  dataSource: MatTableDataSource<Icr>;
   @ViewChild('fieldTable') table: MatTable<Element>;
 
   private error: any;
@@ -25,10 +29,7 @@ export class IcrComponent implements OnInit {
   private rawData: any;
 
   public icrs: Icr[]=[];
-  private invalidIcrs: Icr[]=[];
-
-  public filteredIcrs: Icr[]=[];
-
+  public invalidIcrs: Icr[]=[];
   public pageSize:number  = 30;
   public pageStart:number = 0;
   public pageIndex:number=0
@@ -42,23 +43,40 @@ export class IcrComponent implements OnInit {
   public displayFilter: string="B";
   public displayQuery: string="";
   public displayField: string="";
-  public displaySort: string="ICR #";
+  public displaySort: string="quality";
 
   public hideInvalid: boolean=true;
 
   descriptionFlag=false;
 
   public loading:boolean=true;
+  public breakpoint:number=3;
 
-  public fieldList: IcrField[] = [];
-  public sortBy: string[]=['Quality', 'ICR #', 'Status', 'Usage'];
-
+  public fieldList: IcrField[] = [{value: '#',external: 'ID'},{value: 'val', external: 'Value'}, {value: 'desc', external: 'Description'}, {value: 'valdesc', external: 'Value+Description'}];
+  public sortBy: IcrField[]=[{value: 'id', external: 'ID'}, {value: 'quality', external: 'Quality'}];
   displayedColumns: string[] = ['file', 'value', 'direction', 'method'];
-  public constructor(private icrService: IcrService, public dialog: MatDialog) { }
+  public constructor(private icrService: IcrService, public dialog: MatDialog, private changeDetectorRef: ChangeDetectorRef) { }
    ngOnInit(): void {
     this.loading=true;
+    this.displayField='val';
     this.getIcrs();
+
+    this.onResize(null);
   }
+
+
+    onResize($event) {
+      console.log(window.innerWidth);
+      if (window.innerWidth<=910) {
+        this.breakpoint=1;
+      }
+      else if (window.innerWidth<=1274) {
+        this.breakpoint=2;
+      }
+      else {
+        this.breakpoint=3;
+      }
+    }
 
   public openFileUpload() {
     let element: HTMLElement =document.getElementById('upload_icr_input') as HTMLElement;
@@ -291,12 +309,60 @@ export class IcrComponent implements OnInit {
         //this.rawData = data
         //this.processICR();
         this.icrs=data;
+
         this.initialProcess();
         this.loading=false;
-        this.filteredIcrs=this.icrs;
-        this.pageLength=this.filteredIcrs.length;
-        this.displayIcrCards();
-        this.populateFieldList();
+        this.dataSource = new MatTableDataSource<Icr>(this.icrs);
+        this.sortDataSource();
+        this.changeDetectorRef.detectChanges();
+        this.dataSource.paginator = this.paginator;
+        this.obs = this.dataSource.connect();
+
+        this.sortDataSource();
+
+        this.dataSource.filterPredicate =(data: Icr, filter: string) => {
+          if (this.hideInvalid) {
+            if (data.status.toLowerCase()==='withdrawn' || data.status.toLowerCase()==='expired') {
+              return false;
+            }
+          }
+
+          filter=filter.toLowerCase();
+          if (this.displayFilter.toUpperCase()=='R' && data.type.toUpperCase()!='R') return false;
+          if (this.displayFilter.toUpperCase()=='G' && data.type.toUpperCase()!='G') return false;
+
+          if (filter=='*@*@*#@!!') return true;
+
+          if(this.displayField==='#') {
+            return data.id.toString()===filter;
+          }
+          else if (this.displayField==='val') {
+            if (data.value==undefined || data.value==null) return false;
+            if (data.value.trim().toLowerCase().substr(0, filter.length) === filter) return true;
+            if (data.file != undefined && data.file != null) {
+              if (data.file.toString() === filter) return true;
+            }
+            return false;
+          }
+          else if (this.displayField=='desc') {
+            for (let desc of data.description) {
+              if (desc.trim().toLowerCase().includes(filter)) return true;
+            }
+            return false;
+          }
+          else if (this.displayField=='valdesc') {
+            if (data.value!=undefined || data.value!=null) {
+              if (data.value.trim().toLowerCase().substr(0, filter.length) === filter) return true;
+              if (data.file != undefined && data.file != null) {
+                if (data.file.toString() === filter) return true;
+              }
+            }
+            for (let desc of data.description) {
+              if (desc.trim().toLowerCase().includes(filter)) return true;
+            }
+            return false;
+          }
+        }
       }
     );
   }
@@ -304,175 +370,91 @@ export class IcrComponent implements OnInit {
   getCurrentIcrs():Array<Icr> {
     return this.icrs;
   }
-  populateFieldList():void {
-    this.fieldList=[]; //empty out whatever is in the array.
-
-    //push common fields into the array
-    this.fieldList.push({value: '#', external: 'ICR #'});
-    this.fieldList.push({value: 'name', external: 'ICR Name'});
-    this.fieldList.push({value: 'desc', external: 'Description'});
-
-    if (this.displayFilter=='B') {
-      this.fieldList.push({value: 'val', external: 'ICR Value'});
-      this.fieldList.push({value: 'valdesc', external: 'ICR Value + Description'});
-    }
-    else if (this.displayFilter=='R') {
-      this.fieldList.push({value: 'val', external: 'Routine'});
-      this.fieldList.push({value: 'valdesc', external: 'Routine + Description'});
-    }
-    else if (this.displayFilter=='G') {
-      this.fieldList.push({value: 'val', external: 'Global Root'});
-      this.fieldList.push({value: 'valdesc', external: 'Global Root + Description'});
-    }
-    if (this.displayField=='' || this.displayField==undefined || this.displayField==null) this.displayField='val';
-  }
 
   resetQuery():void {
-    this.filterChange({value: this.displayFilter});
-  }
-
-  filterChange($event):void {
-    this.pageStart=0;
-    this.displayFilter=$event.value;
     this.displayQuery='';
-    this.populateFieldList();
-
-    if ($event.value=='B') {
-      this.filteredIcrs=this.icrs;
-
-      this.pageLength=this.filteredIcrs.length;
-      this.displayIcrCards();
-      return;
-    }
-
-    this.filteredIcrs=[];
-
-    for (let i=0; i<this.icrs.length; i++) {
-      if (this.icrs[i].type==$event.value) {
-        this.filteredIcrs.push(this.icrs[i]);
-      }
-    }
-    this.pageLength=this.filteredIcrs.length;
-    this.pageStart=0;
-    this.paginator.firstPage();
-    this.displayIcrCards();
-
-    return;
+    this.dataSource.filter = '*@*@*#@!!';
   }
 
-  queryChange():void {
-    let tempIcrs:Icr[]=[];
-    let descs:string='';
-
-    if (this.displayQuery == '') {
-      this.filteredIcrs=this.icrs;
-      this.paginator.firstPage();
-      this.displayIcrCards();
-    }
-
-    if (this.displayQuery.includes('^')) {
-      let parts=this.displayQuery.split('^');
-      this.filteredIcrs=[];
-      for (let icr of this.icrs) {
-        if (icr.type==='R') {
-          if (icr.value==undefined || icr.value==null) continue;
-          if (icr.value.toLowerCase()===parts[1].toLowerCase()) {
-            for (let i=0; i<icr.tags.length; i++) {
-              if (icr.tags[i].toLowerCase()==parts[0].toLowerCase()) {
-                this.filteredIcrs.push(icr);
-                break;
-              }
-            }
-          }
-        }
-      }
-      this.paginator.firstPage();
-      this.displayIcrCards();
-      return;
-    }
-    let duplicateCheck=false;
-    for (let i=0; i<this.filteredIcrs.length; i++) {
-      descs=this.filteredIcrs[i].description.join('\n');
-
-      switch(this.displayField) {
-        case '#':
-          if (this.filteredIcrs[i].id.toString().toLowerCase().includes(this.displayQuery.toLowerCase())) {
-            tempIcrs.push(this.filteredIcrs[i]);
-          }
-          break;
-        case 'name':
-          if (this.filteredIcrs[i].name.toLowerCase().includes(this.displayQuery.toLowerCase())) {
-            tempIcrs.push(this.filteredIcrs[i]);
-          }
-          break;
-        case 'valdesc':
-          duplicateCheck=false;
-          if (this.filteredIcrs[i].value.toLowerCase().includes(this.displayQuery.toLowerCase()) || descs.toLowerCase().includes(this.displayQuery.toLowerCase())) {
-            tempIcrs.push(this.filteredIcrs[i]);
-            duplicateCheck=true;
-          }
-          if (!duplicateCheck && this.filteredIcrs[i].type=='G') {
-            if (this.filteredIcrs[i].file.includes(this.displayQuery.toLowerCase())) {
-              tempIcrs.push(this.filteredIcrs[i]);
-            }
-          }
-          break;
-        case 'val':
-          duplicateCheck=false;
-          if (this.filteredIcrs[i].value==undefined || this.filteredIcrs[i].value==null) break;
-          if (this.filteredIcrs[i].value.toLowerCase().includes(this.displayQuery.toLowerCase())) {
-            duplicateCheck=true;
-            tempIcrs.push(this.filteredIcrs[i]);
-          }
-          if (!duplicateCheck && this.filteredIcrs[i].type=='G') {
-            if (this.filteredIcrs[i].file.includes(this.displayQuery.toLowerCase())) {
-              tempIcrs.push(this.filteredIcrs[i]);
-            }
-          }
-          break;
-        case 'desc':
-          if (descs.toLowerCase().includes(this.displayQuery.toLowerCase())) {
-            tempIcrs.push(this.filteredIcrs[i]);
-            break;
-          }
-          break;
-      }
-    }
-    this.paginator.firstPage();
-    this.filteredIcrs=[];
-    this.filteredIcrs=tempIcrs
-    this.displayIcrCards();
-  }
-
-  displayIcrCards():void {
+  /*displayIcrCards():void {
     this.pageIcrs=[]; //clear out existing displaying cards
     this.pageLength=this.filteredIcrs.length;
 
     /*if (this.filteredIcrs.length==0) {
       this.filterChange({value: this.displayFilter});
-    }*/
+    }
     for (let i=(this.pageStart*this.pageSize); i<(this.pageStart*this.pageSize)+this.pageSize; i++) {
       if (this.filteredIcrs[i]==undefined || this.filteredIcrs[i]==null) break;
       this.pageIcrs.push(this.filteredIcrs[i]);
     }
 
+  }*/
+  sortDataSource() {
+    //this.dataSource.sort.sort(<MatSortable>({ id: id, start: start }));
+    if (this.displaySort=='id') {
+      this.dataSource.data.sort((a: any, b: any) => {
+          if (a.id < b.id) {
+              return -1;
+          } else if (a.id > b.id) {
+              return 1;
+          } else {
+              return 0;
+          }
+      });
+    }
+    else if (this.displaySort=='quality') {
+      this.dataSource.data.sort((a: any, b: any) => {
+          if (a.quality < b.quality) {
+              return 1;
+          } else if (a.quality > b.quality) {
+              return -1;
+          } else {
+              return 0;
+          }
+      });
+    }
+    //this.dataSource.connect().next(this.icrs);
+    //this.paginator._changePageSize(this.paginator.pageSize);
   }
 
-  onPageChanged(event):any {
-    this.pageStart=event.pageIndex;
-    this.pageSize=event.pageSize;
-    this.displayIcrCards();
-    return event;
+  applyFilter(filterValue): void {
+    filterValue = filterValue.trim(); // Remove whitespace
+    filterValue = filterValue.toLowerCase(); // MatTableDataSource defaults to lowercase matches
+    this.dataSource.filter = filterValue;
+  }
+  sortChange(): void {
+    console.log(this.displaySort);
+    this.sortDataSource();
+    this.resetQuery();
+  }
+  filterChange(val): void {
+    this.displayFilter=val;
+    switch(this.displayFilter){
+      case 'R':
+        this.fieldList[1].external='Routine';
+        break;
+      case 'G':
+        this.fieldList[1].external='Global';
+        break;
+      default:
+        this.fieldList[1].external='Value';
+        break;
+    }
+    this.resetQuery();
   }
 
-  onKeydown(event): void {
-    if (event.key=='Enter') {
-      this.queryChange();
+  checkBoxChange():void {
+    if (this.invalidIcrs.length>0) {
+
+      for (let icr of this.invalidIcrs) {
+        icr.quality=-100000;
+        this.icrs.push(icr);
+      }
+      this.invalidIcrs=[];
     }
-    else if (event.key=='Escape') {
-      this.displayQuery='';
-      this.queryChange();
-    }
+    this.displayQuery='';
+    //this.changeDetectorRef.detectChanges();
+    this.dataSource.filter = '*@*@*#@!!';
   }
 
   onValidate(target, flag):void {
@@ -482,11 +464,6 @@ export class IcrComponent implements OnInit {
       if (icr.id===target.id) {
         icr.validated=flag;
         targetIcr=icr;
-      }
-    }
-    for (let icr of this.filteredIcrs) {
-      if (icr.id===target.id) {
-        icr.validated=flag;
       }
     }
     this.icrService.uploadIcr(targetIcr);
@@ -543,24 +520,6 @@ isNumeric(val):boolean {
         && (typeof val !== 'object'); //Array/object check
   }
 
-  checkBoxChange():void {
-    this.resetQuery();
-
-    if (this.hideInvalid) {
-      for (let [index,icr] of this.filteredIcrs.entries()) {
-        if (icr.status.toLowerCase()=='withdrawn') { // || icr.status.toLowerCase()=='retired') {
-          this.filteredIcrs.splice(index,1);
-          //this.invalidIcrs.push(icr);
-        }
-      }
-    }
-    else {
-      for (let icr of this.invalidIcrs) {
-        this.filteredIcrs.push(icr);
-      }
-    }
-  }
-
   initialProcess():void {
     let keyWords=['both','r/w', 'fileman', 'direct', 'read', '& w'];
     // Loop through and for each of global ICR, guess its fields only if it's invalidated.
@@ -572,12 +531,45 @@ isNumeric(val):boolean {
       if (icr.status.toLowerCase()==='withdrawn' || icr.status.toLowerCase()==='expired') {
         this.invalidIcrs.push(this.icrs[i]);
         this.icrs.splice(i,1);
+        continue;
       }
+      if (icr==undefined || icr==null) continue;
+      let quality=0;
+      if (icr.status.toLowerCase()==='active') {
+        quality=100000;
+      }
+      else if (icr.status.toLowerCase()==='retired') {
+        quality=-1000;
+      }
+
+      if (icr.usage.toLowerCase()==='supported') {
+        quality=quality+10000;
+      }
+      else if (icr.usage.toLowerCase()==='controlled') {
+        quality=quality+9000;
+      }
+      else if (icr.usage.toLowerCase()==='private') {
+        quality=quality+8000;
+      }
+
+      if (icr.expires!=undefined && icr.expires!=null && icr.expires!='') {
+        quality=0;
+      }
+
+      for (let fld of icr.fields) {
+        if (fld.value=='*') {
+          quality=quality+999;
+        }
+      }
+      if (icr.validated) quality=quality+icr.fields.length;
+      this.icrs[i].quality=quality;
     }
 
     for (let [index,icr] of this.icrs.entries()) {
       // Make sure that withdrawn and retired ICRs do not displaying
       // Generate list of fields by guesstimate...
+
+
       if (icr.type==='R') {
         // look at tags and get rid of $$ and () and []
         // and auto validate routine ICRs
@@ -817,7 +809,8 @@ isNumeric(val):boolean {
         comparison=1;
       }
       else if (b.usage>a.usage) {
-        comparison=-1;
+        comparison=-
+        1;
       }
     }
     return comparison;
@@ -850,5 +843,11 @@ isNumeric(val):boolean {
       this.table.renderRows();
       console.log('The dialog was closed');
     });
+  }
+
+  ngOnDestroy() {
+    if (this.dataSource) {
+      this.dataSource.disconnect();
+    }
   }
 }

@@ -11,8 +11,15 @@
 
 <div class="main-search-form">
   <form style="width: 100%;">
+    <mat-form-field id="dropdown-field-sort">
+      <mat-select [(ngModel)]="displaySort" [ngModelOptions]="{standalone: true}" (selectionChange)="sortChange()">
+        <mat-option *ngFor="let sort of sortBy" [value]="sort.value">{{sort.external}}</mat-option>
+      </mat-select>
+      <mat-label>Sort By</mat-label>
+    </mat-form-field>
+
     <mat-form-field id="dropdown-field">
-      <mat-select required [(ngModel)]="displayField" [ngModelOptions]="{standalone: true}">
+      <mat-select [(ngModel)]="displayField" [ngModelOptions]="{standalone: true}">
         <mat-option *ngFor="let field of fieldList" [value]="field.value">{{field.external}}</mat-option>
       </mat-select>
       <mat-label>ICR Field</mat-label>
@@ -20,7 +27,7 @@
 
     <mat-form-field id="query-string">
         <mat-label>Filter by...</mat-label>
-        <input matInput [(ngModel)]="displayQuery" [ngModelOptions]="{standalone: true}" (keydown)="onKeydown($event)">
+        <input matInput [(ngModel)]="displayQuery" [ngModelOptions]="{standalone: true}" (keyup)="applyFilter($event.target.value)">
         <button type="button" mat-button *ngIf="displayQuery" matSuffix mat-icon-button aria-label="Clear" (click)="resetQuery()">
           <mat-icon>close</mat-icon>
         </button>
@@ -34,27 +41,20 @@
     </mat-form-field-->
 
     <mat-radio-group name="displayFilter" [(ngModel)]="displayFilter" [ngModelOptions]="{standalone: true}" id="display-filter" aria-label="Select an option">
-      <mat-radio-button class="radio-option" value="B" checked (change)="filterChange($event)">All&nbsp;</mat-radio-button>
-      <mat-radio-button class="radio-option" value="G" (change)="filterChange($event)">Global&nbsp;</mat-radio-button>
-      <mat-radio-button class="radio-option" value="R" (change)="filterChange($event)">Routine&nbsp;</mat-radio-button>
+      <mat-radio-button class="radio-option" value="B" (change)="filterChange($event.value)" checked>All&nbsp;</mat-radio-button>
+      <mat-radio-button class="radio-option" value="G" (change)="filterChange($event.value)">Global&nbsp;</mat-radio-button>
+      <mat-radio-button class="radio-option" value="R" (change)="filterChange($event.value)">Routine&nbsp;</mat-radio-button>
     </mat-radio-group>
 
     <mat-checkbox name="display-checkBox" style="margin-left: 5px;" (change)="checkBoxChange()" [(ngModel)]="hideInvalid">No EXPIRED/WITHDRAWN</mat-checkbox>
   </form>
 </div>
 
-<mat-paginator *ngIf="!loading" #paginator [length]="pageLength"
-               [pageSize]="pageSize"
-               [pageSizeOptions]="pageSizeOptions"
-               [pageIndex]="pageIndex"
-               [previousPageIndex]="previousPageIndex"
-               (page)="pageEvent = onPageChanged($event)">
-</mat-paginator>
-
 <mat-spinner class="loading-indicator" *ngIf="loading"></mat-spinner>
 
-<mat-grid-list cols="3">
-  <mat-grid-tile *ngFor="let icr of pageIcrs" >
+<mat-grid-list [cols]="breakpoint" rowHeight="1:1" (window:resize)="onResize($event)">
+  <ng-container *ngFor="let icr of obs | async">
+  <mat-grid-tile>
     <mat-card class="icr-card" style="margin-top:10px;">
       <mat-card-header>
         <mat-icon *ngIf="icr.validated" mat-card-avatar matTooltip="Validated">done_outline</mat-icon>
@@ -127,12 +127,11 @@
       </mat-card-actions>
     </mat-card>
   </mat-grid-tile>
+  </ng-container>
 </mat-grid-list>
 
-<mat-paginator *ngIf="!loading" #paginator [length]="pageLength"
+<mat-paginator *ngIf="!loading" #paginator [length]="pageLength" class="mat-paginator-sticky"
                [pageSize]="pageSize"
                [pageSizeOptions]="pageSizeOptions"
-               [pageIndex]="pageIndex"
-               [previousPageIndex]="previousPageIndex"
-               (page)="pageEvent = onPageChanged($event)">
+               [pageIndex]="pageIndex">
 </mat-paginator>

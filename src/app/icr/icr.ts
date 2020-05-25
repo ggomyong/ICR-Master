@@ -17,6 +17,7 @@ export class Icr {
   tags: Array<string>;
   fields: Array<Field>;
   fieldIndex: Array<string>;
+  quality: number;
   public constructor() {
     this.id=0;
     this.name='';
