@@ -66,7 +66,6 @@ export class IcrComponent implements OnInit {
 
 
     onResize($event) {
-      console.log(window.innerWidth);
       if (window.innerWidth<=910) {
         this.breakpoint=1;
       }
