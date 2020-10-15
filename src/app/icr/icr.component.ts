@@ -247,32 +247,37 @@ export class IcrComponent implements OnInit {
         if (type!=null && type!=undefined) {
           type=type.replace(/\r/g, '');
         }
-        switch(type) {
-          case 'File':
-            icr.type='G';
-            break;
-          case 'Remote':
-          case 'Routine':
-            icr.type='R';
-            break;
-          case 'Other':
-            icr.type='O';
-            break;
-          default:
-            icr.type='U';
+        if (type) {
+          switch(type.toLocaleUpperCase()) {
+            case 'FILE':
+              icr.type='G';
+              break;
+            case 'REMOTE':
+              //type is remote procedure.
+            case 'ROUTINE':
+              icr.type='R';
+              break;
+            case 'OTHER':
+              icr.type='O';
+              break;
+            default:
+              icr.type='U';
+          }
         }
+        
       }
-      else if (this.descriptionFlag && array[0]=='ROUTINE:') {
+      else if (this.descriptionFlag && array[0]=='ROUTINE:' && !array.includes('TYPE:')) {
         this.descriptionFlag=false;
+        
         if (array[1]!=undefined && array[1].length>0 && icr.type==='R') {
           icr.value=array[1];
           if (array[2]!=undefined && array[2]!=null && array[2].length>0 && array[2].length>1) {
             icr.value=array[2].split('\r').join('');
             icr.tags.push(array[1]);
+            console.log(icr.id);
           }
         }
         //if (icr.id==7) console.log(icr.value);
-
       }
       else if (!this.descriptionFlag && array[0]=='COMPONENT:') {
         icr.tags.push(array[1]);
