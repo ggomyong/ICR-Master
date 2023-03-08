@@ -37,15 +37,12 @@ table {
   margin-right: 5px;
   margin-top: 5px;
   margin-bottom: 5px;
-  .icr-description{
-    overflow: auto;
-    height: 145px;
-    max-height: 145px;
-  }
+
   .icr-components{
     overflow: auto;
-    height: 125px;
-    max-height: 145px;
+    height: 270px;
+    max-height: 270px;
+    margin-top: 1px;
   }
 }
 .main-search-form {
@@ -60,7 +57,7 @@ table {
   #display-filter {
     width: 15%;
     .radio-option {
-      right-margin: 5px;
+      margin-right: 5px;
     }
   }
   #dropdown-sort {
@@ -91,4 +88,23 @@ table {
   bottom: 0px;
   position: sticky;
   z-index: 10;
+}
+.sub-title-font {
+  font-size: 15px;
+}
+
+.subcard {
+  margin: 5px;
+}
+::ng-deep {
+  th.mat-header-cell, td.mat-cell, td.mat-footer-cell {
+    padding: 5px!important;
+  }
+  th.mat-header-cell, td.mat-cell, td.mat-footer-cell {
+    padding: 5px!important;
+  }
+}
+.description_p {
+  font-size: 13px;
+  margin-top: -8px!important;
 }

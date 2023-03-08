@@ -1,16 +1,15 @@
-import { Component, OnInit, Inject, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { Observable } from 'rxjs';
-import {PageEvent, MatPaginatorModule, MatPaginator} from '@angular/material/paginator';
+import {PageEvent, MatPaginator} from '@angular/material/paginator';
 import {IcrService, IcrMaster} from './icr.service';
-import {Icr} from './icr';
+import {GlobalReference, Icr, SubscribingPackage, Tag, Variable} from './icr';
 import {Field} from './icr';
 import {IcrField} from './icr-field';
-import { MaterialFileInputModule } from 'ngx-material-file-input';
-import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
+import {MatDialog} from '@angular/material/dialog';
 import { MatTableDataSource, MatTable } from '@angular/material/table';
-import {MatSortModule} from '@angular/material/sort';
-
-import {Injectable} from '@angular/core';
+import {faGlobe} from '@fortawesome/free-solid-svg-icons';
+import {faCloud} from '@fortawesome/free-solid-svg-icons';
+import {faFileCode} from '@fortawesome/free-solid-svg-icons';
 import {IcrDialog} from './global.icr.dialog';
 @Component({
   selector: 'tos-icr',
@@ -55,6 +54,16 @@ export class IcrComponent implements OnInit {
   public fieldList: IcrField[] = [{value: '#',external: 'ID'},{value: 'val', external: 'Value'}, {value: 'desc', external: 'Description'}, {value: 'valdesc', external: 'Value+Description'}];
   public sortBy: IcrField[]=[{value: 'id', external: 'ID'}, {value: 'quality', external: 'Quality'}];
   displayedColumns: string[] = ['file', 'value', 'direction', 'method'];
+  variableDisplayedColumns: string[] = ['name', 'type', 'description'];
+  get faGlobe() {
+    return faGlobe;
+  }
+  get faCloud() {
+    return faCloud;
+  }
+  get faFileCode() {
+    return faFileCode;
+  }
   public constructor(private icrService: IcrService, public dialog: MatDialog, private changeDetectorRef: ChangeDetectorRef) { }
    ngOnInit(): void {
     this.loading=true;
@@ -93,6 +102,7 @@ export class IcrComponent implements OnInit {
   }
   public breakAndCombine(words:string):Array<string> {
     //First break and discard empty member and return only meaningful members
+    words = words.replace(/(\r\n|\n|\r)/gm, "");
     let strAry=words.split(' ');
     let returnable:Array<string>=[];
     for (let word of strAry) {
@@ -172,131 +182,355 @@ export class IcrComponent implements OnInit {
   public handleBulkUpload(texts:Array<string>) {
     let icr:Icr=new Icr();
     let icrs:Array<Icr>=[];
+    let field: Field = new Field();
+    let tag: Tag = new Tag();
+    let variable: Variable = new Variable();
+    let subscribingPackage: SubscribingPackage = new SubscribingPackage();
+
+    let variableDescription: boolean = false;
+    let fieldDescription: boolean = false;
+    let globalDescription: boolean = false;
+    let componentDescription: boolean = false;
+
+    let globalReference: GlobalReference = new GlobalReference();
+
     let icrList:Array<string>=[];
 
     for (let text of texts) {
       let array=this.breakAndCombine(text);
-      let descriptionFlag=false;
-
-      if (!this.descriptionFlag && array[1]=='NAME:') {
-        if (icr.id>0) {
-          //icrs.push(icr); //push already created one, and then begin again.
-          icrList.push(icr.id.toString());
-          if (this.isIcrUpdated(icr,this.getIcrById(icr.id))) {
-            icr.validated=false;
-            //console.log(console.log(JSON.stringify(this.getIcrById(icr.id))));
+      
+      if (!this.descriptionFlag) {
+        if (array[0]=="NUMBER:") {
+          fieldDescription = false;
+          variableDescription = false;
+          globalDescription = false;
+          componentDescription= false;
+          if (icr.id>0) {
+            icrList.push(icr.id.toString());
+            if (this.isIcrUpdated(icr,this.getIcrById(icr.id))) {
+              icr.validated=false;
+              //console.log(console.log(JSON.stringify(this.getIcrById(icr.id))));
+            }
+            //push the last globalreference
+            if (globalReference.reference) {
+              if (field.value) {
+                globalReference.fields.push(field)
+                field = new Field();
+              }
+              icr.globalReferences.push(globalReference)
+              globalReference = new GlobalReference();
+            }
+            //push the last tag
+            if (tag.name) {
+              if (variable.name) {
+                tag.variables.push(variable)
+              }
+              icr.tags.push(tag);
+              tag = new Tag();
+              variable = new Variable();
+            }
+            //push the last subscribing package
+            if (subscribingPackage.name) {
+              icr.subscribingPackages.push(subscribingPackage);
+              subscribingPackage = new SubscribingPackage();
+            }
+            if (icr.globalReferences && icr.globalReferences.length>0 && icr.file=='') {
+              icr.file='0'
+              if (!icr.value.includes('DD') && icr.value.includes('(')) {
+                let f = icr.value.substring(icr.value.indexOf('(')+1,icr.value.indexOf(','))
+                if (!isNaN(Number(f))) {
+                  icr.file = f;
+                }else {
+                  switch(f) {
+                    case 'PSRX(':
+                      icr.file = '52'
+                      break;
+                    case 'ICD9(':
+                      icr.file = '80'
+                      break;
+                    case 'LAB(':
+                      icr.file= '60'
+                      break;
+                    case 'PXRMINDX(':
+                      break;
+                    case 'A7RCP(':
+                      break;
+                    case 'XUSEC(':
+                      icr.file='3.081';
+                      break;
+                    case 'DPT(':
+                      icr.file='2'
+                      break;
+                  }
+                }
+                // recursive updating of fields
+                if (icr.file) {
+                  for (let ref of icr.globalReferences) {
+                    for (let field of ref.fields) {
+                      if (!field.file) {
+                        field.file = Number(icr.file);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            icrs.push(icr);
           }
-          else if (this.getIcrById(icr.id)!=null) {
-            icr=this.getIcrById(icr.id);
-          }
-
-          icrs.push(icr);
+          icr=new Icr(); //and then, start a new ICR instance
+          icr.id=Number(array[1]);
         }
-        icr=new Icr(); //and then, start a new ICR instance
-        icr.id=Number(array[0]);
-        array.splice(0,2);
-        let name=array.join(' ');
-        if (name!=undefined && name !=null) name=name.replace(/\r/g, '');
-        icr.name=name;
-      }
-      else if (!this.descriptionFlag && array[0]=='CUSTODIAL' && array[1]=='PACKAGE:') {
-        array.splice(0,2);
-        let custodialPackage=array.join(' ');
-        if (custodialPackage!=undefined && custodialPackage !=null) custodialPackage=custodialPackage.replace(/\r/g, '');
-        icr.custodialPackage=custodialPackage;
-      }
-      else if (!this.descriptionFlag && array[0]=='SUBSCRIBING' && array[1]=='PACKAGE:') {
-        array.splice(0,2);
-        let subscribingPackage=array.join(' ');
-        if (subscribingPackage!=undefined && subscribingPackage !=null) subscribingPackage=subscribingPackage.replace(/\r/g, '');
-        icr.subscribingPackage=subscribingPackage;
-      }
-      else if (!this.descriptionFlag && array[0]=='USAGE:') {
-        icr.usage=array[1];
-        array.splice(0,3);
-        let entered=text.split('ENTERED: ')[1];
-        if (entered!=undefined && entered !=null) entered=entered.replace(/\r/g, '');
-        icr.entered=entered;
-      }
-      else if (!this.descriptionFlag && array[0]=='STATUS:') {
-        icr.status=this.breakAndCombine(text.split('STATUS: ')[1].split("EXPIRES:")[0]).join(' ');
-        if (icr.status=='EXPIRES:') icr.status='';
-        array.splice(0,3);
-        let expires=text.split('EXPIRES: ')[1];
-        if (expires!=undefined && expires !=null) expires=expires.replace(/\r/g, '');
-        icr.expires=expires;
-      }
-      else if (!this.descriptionFlag && array[0]=='DURATION:') {
-        icr.duration=this.breakAndCombine(text.split('DURATION: ')[1].split("VERSION:")[0]).join(' ');
-        let version=text.split('VERSION: ')[1];
-        if (version!=undefined && version !=null) version=version.replace(/\r/g, '');
-        icr.version=version;
-      }
-      else if (!this.descriptionFlag && array[0]=='FILE:' && array.includes('ROOT:')) {
-
-        icr.file=array[1];
-        if (icr.file=='ROOT:') icr.file='';
-        let value=text.split('ROOT: ')[1];
-        if (value!=undefined && value !=null) value=value.replace(/\r/g, '');
-        icr.value=value;
-      }
-      else if (!this.descriptionFlag && array[0]=='DESCRIPTION:') {
-        this.descriptionFlag=true;
-
-        let type=array[2];
-        if (type!=null && type!=undefined) {
-          type=type.replace(/\r/g, '');
+        if (array.includes("FILE") && array.includes('NUMBER:') && array.join(' ').includes('FILE NUMBER:')) {
+          icr.file = array[array.findIndex((node)=> node=='NUMBER:')+1];
         }
-        if (type) {
-          switch(type.toLocaleUpperCase()) {
-            case 'FILE':
-              icr.type='G';
-              break;
-            case 'REMOTE':
-              //type is remote procedure.
-            case 'ROUTINE':
-              icr.type='R';
-              break;
-            case 'OTHER':
-              icr.type='O';
-              break;
-            default:
-              icr.type='U';
+        if (array.includes('GLOBAL') && array.includes('ROOT:') && array.join(' ').includes('GLOBAL ROOT:')) {
+          icr.value=array[array.findIndex((node)=>node=='ROOT:')+1];
+        }
+        if (array.includes('ROUTINE:')) {
+          icr.value = array[array.findIndex((node)=>node=='ROUTINE:')+1]
+        }
+        if (array.includes('COMPONENT/ENTRY') && array.includes('POINT:')) {
+          componentDescription = false;
+          if (tag.name) {
+            if (variable.name) {
+              tag.variables.push(variable);
+              variable = new Variable();
+            }
+            icr.tags.push(tag);
           }
+          tag = new Tag()
+          let temp = JSON.parse(JSON.stringify(array))
+          temp.splice(0, temp.findIndex((node)=>node=='POINT:')+1)
+          tag.name = temp.join(' ')
         }
         
-      }
-      else if (this.descriptionFlag && array[0]=='ROUTINE:' && !array.includes('TYPE:')) {
-        this.descriptionFlag=false;
-        
-        if (array[1]!=undefined && array[1].length>0 && icr.type==='R') {
-          icr.value=array[1];
-          if (array[2]!=undefined && array[2]!=null && array[2].length>0 && array[2].length>1) {
-            icr.value=array[2].split('\r').join('');
-            icr.tags.push(array[1]);
-            console.log(icr.id);
+        if (array.includes('VARIABLES:')) {
+          variableDescription = false;
+          componentDescription = false;
+          if (variable.name) {
+            tag.variables.push(variable);
+            variable = new Variable();
+          }
+
+          variable.name = array[array.findIndex((node)=>node=='VARIABLES:')+1]
+          if (array.includes('TYPE:')) {
+            variable.type = array[array.findIndex((node)=>node=='TYPE:')+1]
           }
         }
-        //if (icr.id==7) console.log(icr.value);
+        if (array.includes('USAGE:')) {
+          icr.usage = array[array.findIndex((node)=>node=='USAGE:')+1];
+        }
+        if (array.includes('CUSTODIAL') && array.includes('ISC:')) {
+          let temp = JSON.parse(JSON.stringify(array))
+          temp.splice(0, temp.findIndex((node)=>node=='ISC:')+1)
+          temp.splice(temp.findIndex((node)=>node=='USAGE:'), temp.length)
+          icr.custodialIsc = temp.join(' ')
+        }
+        if (array.includes('CUSTODIAL') && array.includes('PACKAGE:') && array.join(' ').includes('CUSTODIAL PACKAGE:')) {
+          icr.custodialPackage = array[array.findIndex((node)=> node=='PACKAGE:')+1];
+        }
+        
+        if ( array.includes('TYPE:')  && !array.includes('VARIABLES:')) {
+          icr.type= array[array.findIndex((node)=>node=='TYPE:')+1];
+          if (icr.type.toLocaleLowerCase()=='remote') {
+            icr.type='Remote Procedure'
+          }
+        }
+        if (array.includes('REMOTE') && array.includes('PROCEDURE:') && array.join(' ').includes('REMOTE PROCEDURE:')) {
+          let temp = JSON.parse(JSON.stringify(array))
+          temp.splice(0, temp.findIndex((node)=>node=='PROCEDURE:')+1)
+          if (temp.join(' ').includes(':')) {
+            temp.join(' ').split(':')[0].split(' ')
+            temp.splice(temp.length-2,2)
+          }
+          icr.remoteProcedure = temp.join(' ')
+            icr.value = icr.remoteProcedure
+        }
+        if (array.includes('NAME:') && !array.join(' ').includes('FIELD NAME:')) {
+          let temp: string[] = JSON.parse(JSON.stringify(array))
+          let name = temp.splice(temp.findIndex((node)=>node==='NAME:')+1,temp.length)
+          let index = name?.join(' ')?.split(':')[0]?.split(' ')
+          if (index.includes('ORIGINAL') && index.includes('NUMBER') && index.join(' ').includes('ORIGINAL NUMBER')) {
+            index.splice(index.length-2, 2);
+          }
+          icr.name = index.join(' ')
+        }
+        if (array.includes('GLOBAL') && array.includes('REFERENCE:') && array.join(' ').includes('GLOBAL REFERENCE:')) {
+          globalDescription = false;
+          if (globalReference.reference) {
+            if (field.value) {
+              globalReference.fields.push(field)
+              field = new Field();
+            }
+            icr.globalReferences.push(globalReference);
+          }
+          globalReference = new GlobalReference();
+          let temp = JSON.parse(JSON.stringify(array))
+          temp.splice(0, temp.findIndex((node)=>node=='REFERENCE:')+1)
+          globalReference.reference = temp.join(' ')
+          globalReference.fields = [];
+          globalReference.description = [];
+        }
+        if (array.includes('FIELD') && array.includes('NUMBER:') && array.join(' ').includes('FIELD NUMBER:')) {
+          fieldDescription = false;
+          if (field.value && Number(field.value)>0) {
+            globalReference.fields.push(field);
+          }
+          
+          field = new Field();
+          field.value = array[array.findIndex((node)=>node=='NUMBER:')+1];
+          field.file = Number(icr.file)
+        }
+        if (array.includes('FIELD') && array.includes('NAME:') && array.join(' ').includes('FIELD NAME:')) {
+          fieldDescription = false;
+          let temp = JSON.parse(JSON.stringify(array))
+          temp.splice(0, temp.findIndex((node)=>node=='NAME:')+1)
+          field.name = temp.join(' ')
+        }
+        if (array.includes('LOCATION:')) {
+          field.location = array[array.findIndex((node)=>node=='LOCATION:')+1];
+          
+        }
+        if (array.includes('ACCESS:')){
+          let method = array.join(' ').split('ACCESS:')[1].toLocaleLowerCase();
+          
+          if (method.includes('read')) {
+            if (method.includes('write')) {
+              field.direction='Both'
+            }
+            else {
+              field.direction='Read'
+            }
+          } else if (method.includes('write')) {
+            field.direction='Write'
+          } else if (method.includes('r/w')) {
+            field.direction='Both'
+          }
+          if (method.includes('fileman')) {
+            if (method.includes('direct')) {
+              field.method='Both'
+            } else {
+              field.method='Fileman'
+            }
+          } else if (method.includes('direct')) {
+            field.method='Direct'
+          }
+        }
+        if (array.includes('SUBSCRIBING') && array.includes('PACKAGE:') && array.join(' ').includes('SUBSCRIBING PACKAGE:')) {
+          variableDescription = false
+          globalDescription = false;
+          fieldDescription = false;
+          let temp = JSON.parse(JSON.stringify(array))
+          temp.splice(0, 2)
+          if (temp.includes('ISC:')) {
+            temp.splice(temp.findIndex((node)=>node=='ISC:'), temp.length).join(' ')
+            subscribingPackage.name =temp.join(' ')
+          }
+          subscribingPackage.name = temp.join(' ')
+        }
+        if (array.includes('ISC:') && !array.includes('CUSTODIAL')) {
+          let temp=JSON.parse(JSON.stringify(array))
+          subscribingPackage.isc=temp.splice(array.findIndex((node)=>node=='ISC:')+1, temp.length).join(' ')
+          icr.subscribingPackages.push(subscribingPackage);
+          subscribingPackage = new SubscribingPackage();
+        }
+        if (array.includes('STATUS:') && array.includes('DURATION:')) {
+          globalDescription = false;
+          icr.status= array[array.findIndex((node)=>node=='STATUS:')+1]
+          let temp = JSON.parse(JSON.stringify(array))
+          temp.splice(0, temp.findIndex((node)=>node=='DURATION:')+1)
+          icr.duration = temp.join(' ')
+        }
+        if (array.includes('DESCRIPTION:') && array.includes('GENERAL')) {
+          this.descriptionFlag=true;
+          let temp = JSON.parse(JSON.stringify(array))
+          temp.splice(0, 2);
+          icr.description.push(temp.join(' '))
+          continue;
+        }
+        if (componentDescription || (array.includes('COMPONENT') && array.includes('DESCRIPTION:') && array.join(' ').includes('COMPONENT DESCRIPTION:') )) {
+          componentDescription = true;
+          let temp = JSON.parse(JSON.stringify(array))
+          temp.splice(0, temp.findIndex((node)=>node=='DESCRIPTION:')+1)
+          tag.description.push(temp.join(' '))
+        }
+        if (fieldDescription || (array.includes('FIELD') && array.includes('DESCRIPTION:') && array.join(' ').includes('FIELD DESCRIPTION:'))) {
+          fieldDescription = true;
+          let temp = JSON.parse(JSON.stringify(array))
+          temp.splice(0, temp.findIndex((node)=>node=='DESCRIPTION:')+1)
+          field.description.push(temp.join(' '))
+        }
+        if (variableDescription || (array.includes('VARIABLES') && array.includes('DESCRIPTION:')&& array.join(' ').includes('VARIABLES DESCRIPTION:'))) {
+          variableDescription = true;
+          let temp = JSON.parse(JSON.stringify(array))
+          temp.splice(0, temp.findIndex((node)=>node=='DESCRIPTION:')+1)
+          variable.description.push(temp.join(' '))
+        }
+        if (globalDescription || (array.includes('GLOBAL') && array.includes('DESCRIPTION:')&& array.join(' ').includes('GLOBAL DESCRIPTION:'))) {
+          globalDescription = true;
+          let temp = JSON.parse(JSON.stringify(array))
+          temp.splice(0, temp.findIndex((node)=>node=='DESCRIPTION:')+1)
+          globalReference.description.push(temp.join(' '))
+        }
+        if (!array.includes('CUSTODIAL') && array.includes('ISC:') && subscribingPackage.name && array.join(' ').includes('CUSTODIAL ISC:')) {
+          let temp = JSON.parse(JSON.stringify(array))
+          temp.splice(0, temp.findIndex((node)=>node=='ISC:')+1)
+          subscribingPackage.isc = temp.join(' ')
+          icr.subscribingPackages.push(subscribingPackage);
+          subscribingPackage = new SubscribingPackage();
+        }
+        if (array.includes('DBIC') && array.includes('APPROVAL') && array.includes('STATUS:') && array.join(' ').includes('DBIC APPROVAL STATUS:')) {
+          icr.dbicStatus = array[array.findIndex((node)=>node=='STATUS:')+1]
+        }
+        if (array.includes('KEYWORDS:')) {
+          let temp = JSON.parse(JSON.stringify(array))
+          temp.splice(0, temp.findIndex((node)=>node=='KEYWORDS:')+1)
+          icr.keywords.push(temp.join(' '))
+        }
+        if (array.join(' ').includes('DATE CREATED:')) {
+          let dateIndex = array.findIndex((node)=>node =='CREATED:')+1
+          icr.dateCreated =`${array[dateIndex]}  ${array[dateIndex+1]} ${array[dateIndex+2]}`
+        }
       }
-      else if (!this.descriptionFlag && array[0]=='COMPONENT:') {
-        icr.tags.push(array[1]);
-      }
-      else if (this.descriptionFlag) {
-        icr.description.push(array.join(' '));
+      else {
+        if (array.includes('STATUS:')) {
+          this.descriptionFlag = false;
+          icr.status= array[array.findIndex((node)=>node=='STATUS:')+1]
+        }
+        if (array.includes('DURATION:')) {
+          this.descriptionFlag = false;
+          array.splice(0, array.findIndex((node)=>node=='DURATION:')+1)
+          icr.duration = array.join(' ')
+        }
+        else {
+          icr.description.push(array.join(' '));
+        }
       }
     }
     //add the last item to the ICR.
     if (icr.id>0) {
+      if (globalReference.reference) {
+        if (field.value) {
+          globalReference.fields.push(field);
+        }
+        icr.globalReferences.push(globalReference)
+      }
+      //push the last tag
+      if (tag.name) {
+        if (variable.name) {
+          tag.variables.push(variable)
+        }
+        icr.tags.push(tag);
+        tag = new Tag();
+        variable = new Variable();
+      }
+      //push the last subscribing package
+      if (subscribingPackage.name) {
+        icr.subscribingPackages.push(subscribingPackage);
+        subscribingPackage = new SubscribingPackage();
+      }
+
       icrList.push(icr.id.toString());
-      //icrs.push(icr); //push already created one, and then begin again.
-      if (this.getIcrById(icr.id)!=null && this.isIcrUpdated(icr,this.getIcrById(icr.id))) {
-        icr.validated=false;
-        //console.log(console.log(JSON.stringify(this.getIcrById(icr.id))));
-      }
-      else if (this.getIcrById(icr.id)!=null) {
-        icr=this.getIcrById(icr.id);
-      }
       icrs.push(icr);
     }
     let icrMaster:IcrMaster=new IcrMaster;
@@ -313,7 +547,6 @@ export class IcrComponent implements OnInit {
         //this.rawData = data
         //this.processICR();
         this.icrs=data;
-
         this.initialProcess();
         this.loading=false;
         this.dataSource = new MatTableDataSource<Icr>(this.icrs);
@@ -332,9 +565,9 @@ export class IcrComponent implements OnInit {
           }
 
           filter=filter.toLowerCase();
-          if (this.displayFilter.toUpperCase()=='R' && data.type.toUpperCase()!='R') return false;
-          if (this.displayFilter.toUpperCase()=='G' && data.type.toUpperCase()!='G') return false;
-
+          if (this.displayFilter.toUpperCase()=='R' && data.tags?.length<=0) return false;
+          if (this.displayFilter.toUpperCase()=='G' && data.globalReferences?.length<=0) return false;
+          if (this.displayFilter.toUpperCase()=='RPC' && data.remoteProcedure?.length<=0) return false;
           if (filter=='*@*@*#@!!') return true;
 
           if(this.displayField==='#') {
@@ -427,7 +660,6 @@ export class IcrComponent implements OnInit {
     this.dataSource.filter = filterValue;
   }
   sortChange(): void {
-    console.log(this.displaySort);
     this.sortDataSource();
     this.resetQuery();
   }
@@ -439,6 +671,9 @@ export class IcrComponent implements OnInit {
         break;
       case 'G':
         this.fieldList[1].external='Global';
+        break;
+      case 'RPC':
+        this.fieldList[1].external='RPC';
         break;
       default:
         this.fieldList[1].external='Value';
@@ -556,6 +791,10 @@ isNumeric(val):boolean {
         quality=quality+8000;
       }
 
+      if (icr.dbicStatus.toLowerCase() === 'approved') {
+        quality = quality + 10000;
+      }
+
       if (icr.expires!=undefined && icr.expires!=null && icr.expires!='') {
         quality=0;
       }
@@ -568,7 +807,7 @@ isNumeric(val):boolean {
       if (icr.validated) quality=quality+icr.fields.length;
       this.icrs[i].quality=quality;
     }
-
+/*
     for (let [index,icr] of this.icrs.entries()) {
       // Make sure that withdrawn and retired ICRs do not displaying
       // Generate list of fields by guesstimate...
@@ -621,7 +860,7 @@ isNumeric(val):boolean {
         if  (icr.description.length==0) {
           continue;
         }
-        if (!icr.validated) {
+        /*if (!icr.validated) {
           //Loop through description array, we're looking for a line that starts with a number
           // and has verbiages such as Direct, Fileman, and/or Read.
           // has to be on the same line, and cannot be on the multiple lines.
@@ -712,7 +951,7 @@ isNumeric(val):boolean {
       else {
         continue;
       }
-    }
+    }*/
   }
 
   compareForSortForField(a:Field, b:Field):number {

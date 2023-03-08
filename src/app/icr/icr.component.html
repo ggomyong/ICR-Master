@@ -43,7 +43,8 @@
     <mat-radio-group name="displayFilter" [(ngModel)]="displayFilter" [ngModelOptions]="{standalone: true}" id="display-filter" aria-label="Select an option">
       <mat-radio-button class="radio-option" value="B" (change)="filterChange($event.value)" checked>All&nbsp;</mat-radio-button>
       <mat-radio-button class="radio-option" value="G" (change)="filterChange($event.value)">Global&nbsp;</mat-radio-button>
-      <mat-radio-button class="radio-option" value="R" (change)="filterChange($event.value)">Routine&nbsp;</mat-radio-button>
+      <mat-radio-button class="radio-option" value="R" (change)="filterChange($event.value)">Component&nbsp;</mat-radio-button>
+      <mat-radio-button class="radio-option" value="RPC" (change)="filterChange($event.value)">RPC&nbsp;</mat-radio-button>
     </mat-radio-group>
 
     <mat-checkbox name="display-checkBox" style="margin-left: 5px;" (change)="checkBoxChange()" [(ngModel)]="hideInvalid">No EXPIRED/WITHDRAWN</mat-checkbox>
@@ -57,11 +58,9 @@
   <mat-grid-tile>
     <mat-card class="icr-card" style="margin-top:10px;">
       <mat-card-header>
-        <mat-icon *ngIf="icr.validated" mat-card-avatar matTooltip="Validated">done_outline</mat-icon>
-        <mat-icon *ngIf="!icr.validated" mat-card-avatar matTooltip="Not validated">warning</mat-icon>
         <mat-card-title>
-          {{icr.id}}&nbsp;-&nbsp;{{icr.value}}
-          <span *ngIf="icr.type==='G'">
+          {{icr.id}}&nbsp;-&nbsp;{{icr.name}}
+          <span *ngIf="icr.globalReferences && icr.globalReferences.length>0">
             &nbsp;(File #{{icr.file}})
           </span>
 
@@ -71,59 +70,137 @@
             <mat-chip *ngIf="icr.status.length>0" color="accent" selected matTooltip="Status">{{icr.status}}</mat-chip>
             <mat-chip *ngIf="icr.usage.length>0" color="primary" selected matTooltip="Usage">{{icr.usage}}</mat-chip>
             <mat-chip *ngIf="icr.duration.length>0" matTooltip="Duration">{{icr.duration}}</mat-chip>
+            <mat-chip *ngIf="icr.dbicStatus.length>0" matTooltip="DBIC approval status">{{icr.dbicStatus | titlecase}}</mat-chip>
           </mat-chip-list>
         </mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <div class="icr-description">
-          <b>Description</b>
-          <p *ngFor="let description of icr.description">
-            {{description}}
-          </p>
-        </div>
+        
         <div class="icr-components">
-          <b *ngIf="icr.type==='G'">Fields</b>
-          <table #fieldTable *ngIf="icr.fields.length>0" mat-table [dataSource]="icr.fields" class="mat-elevation-z8">
-            <!-- Position Column -->
-            <ng-container matColumnDef="file">
-              <th mat-header-cell *matHeaderCellDef> File </th>
-              <td mat-cell *matCellDef="let element"> {{element.file}} </td>
-            </ng-container>
+          <mat-tab-group>
+            <mat-tab *ngIf="icr.globalReferences && icr.globalReferences.length>0" label="Global References">
+              <h2>{{icr.value}}</h2>
+              <mat-card class="subcard" *ngFor="let globalReference of icr.globalReferences">
+                <mat-card-header>
+                  <mat-card-title class="sub-title-font">{{globalReference.reference}}</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <p class="description_p" *ngFor="let description of globalReference.description">
+                    {{description}}
+                  </p>
+                <b *ngIf="globalReference.fields && globalReference.fields.length>0">Fields</b>
+              <table #fieldTable *ngIf="globalReference.fields.length>0" mat-table [dataSource]="globalReference.fields" class="mat-elevation-z8">
+                <!-- Position Column -->
+                <ng-container matColumnDef="file">
+                  <th mat-header-cell *matHeaderCellDef> File </th>
+                  <td mat-cell *matCellDef="let element"> {{element.file}} </td>
+                </ng-container>
+    
+                <!-- Name Column -->
+                <ng-container matColumnDef="value">
+                  <th mat-header-cell *matHeaderCellDef> Field/Index </th>
+                  <td mat-cell *matCellDef="let element"> {{element.value}} </td>
+                </ng-container>
+    
+                <!-- Weight Column -->
+                <ng-container matColumnDef="direction">
+                  <th mat-header-cell *matHeaderCellDef> Direction </th>
+                  <td mat-cell *matCellDef="let element"> {{element.direction}} </td>
+                </ng-container>
+    
+                <!-- Symbol Column -->
+                <ng-container matColumnDef="method">
+                  <th mat-header-cell *matHeaderCellDef> Method </th>
+                  <td mat-cell *matCellDef="let element"> {{element.method}} </td>
+                </ng-container>
+    
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+              </table>
+                </mat-card-content>
+              </mat-card>
+            </mat-tab>
+            <mat-tab *ngIf="icr.remoteProcedure && icr.remoteProcedure.length>0" label="Remote Procedure">
+              <mat-card-header>
+                <mat-card-title>
+                  {{icr.remoteProcedure}}
+                </mat-card-title>
+              </mat-card-header>
+            </mat-tab>
+            <mat-tab *ngIf="icr.tags && icr.tags.length>0" label="">
+              <ng-template mat-tab-label>
+                <fa-icon [icon]="faGlobe"></fa-icon>
+                <span>Component/Entry Point</span>
+            </ng-template>
+              <h2>{{icr.value}}</h2>
+              <mat-card *ngFor="let tag of icr.tags" class="subcard">
+                <mat-card-header>
+                  <mat-card-title>
+                    {{tag.name}}
+                  </mat-card-title>
+                  
+                </mat-card-header>
+                <mat-card-content>
+                  <p class="description_p" *ngFor="let description of tag.description">
+                    {{description}}
+                  </p>
 
-            <!-- Name Column -->
-            <ng-container matColumnDef="value">
-              <th mat-header-cell *matHeaderCellDef> Field/Index </th>
-              <td mat-cell *matCellDef="let element"> {{element.value}} </td>
-            </ng-container>
-
-            <!-- Weight Column -->
-            <ng-container matColumnDef="direction">
-              <th mat-header-cell *matHeaderCellDef> Direction </th>
-              <td mat-cell *matCellDef="let element"> {{element.direction}} </td>
-            </ng-container>
-
-            <!-- Symbol Column -->
-            <ng-container matColumnDef="method">
-              <th mat-header-cell *matHeaderCellDef> Method </th>
-              <td mat-cell *matCellDef="let element"> {{element.method}} </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-          </table>
-          <div *ngIf="icr.tags.length>0 && icr.type==='R'">
-            <b *ngIf="icr.type==='R'">Tags</b>
-            <div *ngFor="let tag of icr.tags">
-              {{tag}}
-            </div>
-          </div>
-
+                  <table #fieldTable *ngIf="tag.variables.length>0" mat-table [dataSource]="tag.variables" class="mat-elevation-z8">
+                    <!-- Position Column -->
+                    <ng-container matColumnDef="name">
+                      <th mat-header-cell *matHeaderCellDef> Variable </th>
+                      <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+                    </ng-container>
+        
+                    <!-- Name Column -->
+                    <ng-container matColumnDef="type">
+                      <th mat-header-cell *matHeaderCellDef> Type </th>
+                      <td mat-cell *matCellDef="let element"> {{element.type}} </td>
+                    </ng-container>
+        
+                    <!-- Weight Column -->
+                    <ng-container matColumnDef="description">
+                      <th mat-header-cell *matHeaderCellDef> Variable Description </th>
+                      <td mat-cell *matCellDef="let element"> 
+                        <p class="description_p" *ngFor="let description of element.description">
+                          {{description}}
+                        </p>
+                      </td>
+                    </ng-container>
+        
+                    <tr mat-header-row *matHeaderRowDef="variableDisplayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: variableDisplayedColumns;"></tr>
+                  </table>
+                </mat-card-content>
+              </mat-card>
+            </mat-tab>
+            
+            <mat-tab *ngIf="icr.description && icr.description.length>0" label="Description">
+              <mat-card>
+                <mat-card-content>
+                  <p *ngFor="let description of icr.description">
+                    {{description}}
+                  </p>
+                </mat-card-content>
+              </mat-card>
+            </mat-tab>
+            <mat-tab *ngIf="icr.subscribingPackages && icr.subscribingPackages.length>0" label="Subscribing Package">
+              <mat-card class="subcard" *ngFor="let package of icr.subscribingPackages">
+                <mat-card-header>
+                  <mat-card-title>
+                    {{package.name}}
+                  </mat-card-title>
+                  <mat-card-subtitle>
+                    {{package.isc}}
+                  </mat-card-subtitle>
+                </mat-card-header>
+              </mat-card>
+            </mat-tab>
+          </mat-tab-group>
         </div>
       </mat-card-content>
       <mat-card-actions style="text-align: right;">
-        <button mat-raised-button (click)="onEditDialog(icr)">View/Edit</button>
-        <button *ngIf="!icr.validated" (click)="onValidate(icr,true)" mat-raised-button>Validate</button>
-        <button *ngIf="icr.validated" (click)="onValidate(icr,false)" mat-raised-button>Invalidate</button>
+        <button mat-raised-button (click)="onEditDialog(icr)">View</button>
       </mat-card-actions>
     </mat-card>
   </mat-grid-tile>

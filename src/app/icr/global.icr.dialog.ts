@@ -21,7 +21,8 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 })
 @Injectable()
 export class IcrDialog implements OnInit {
-  displayedColumns: string[] = ['file', 'value', 'direction', 'method', 'remove'];
+  displayedColumns: string[] = ['file', 'value', 'direction', 'method'];
+  variableDisplayedColumns: string[] = ['name', 'type', 'description'];
   message:string='';
   update:boolean =false;
 

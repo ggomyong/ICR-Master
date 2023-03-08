@@ -46,6 +46,7 @@ import {IcrComponent} from './icr/icr.component';
 import {IcrDialog} from './icr/global.icr.dialog';
 import { MaterialFileInputModule } from 'ngx-material-file-input';
 import {MAT_DIALOG_DATA} from '@angular/material/dialog';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 
 @NgModule({
@@ -56,6 +57,7 @@ import {MAT_DIALOG_DATA} from '@angular/material/dialog';
   ],
   imports: [
     BrowserModule,
+    FontAwesomeModule,
     AppRoutingModule,
     BrowserAnimationsModule,
     HttpClientModule,

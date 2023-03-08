@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import {Icr} from './icr';
 import { Observable, throwError } from 'rxjs';
-import { catchError, retry } from 'rxjs/operators';
+import { catchError, retry, tap } from 'rxjs/operators';
 
 export class IcrMaster{
   id:string;
@@ -36,6 +36,9 @@ export class IcrService {
   public downloadIcrs() {
     return this.http.get <Icr[]>('/api/download')
       .pipe(
+        tap((data)=>{
+          console.log(data);
+        }),
         retry(3), // retry a failed request up to 3 times
         catchError(this.handleError) // then handle the error
       );
@@ -54,7 +57,11 @@ export class IcrService {
     this.http.post('/api/upload', icrMaster).pipe(
       retry(3), // retry a failed request up to 3 times
       catchError(this.handleError) // then handle the error
-    ) .subscribe((response)=>{
+    ) .pipe(
+      tap((node)=>{
+        console.log(node);
+      })
+    ).subscribe((response)=>{
       console.log(response);
     });
 
