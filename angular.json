@@ -128,5 +128,8 @@
       }
     }
   },
-  "defaultProject": "ICR-Master"
+  "defaultProject": "ICR-Master",
+  "cli": {
+    "analytics": false
+  }
 }
