@@ -8,7 +8,6 @@ import {IcrComponent} from './icr/icr.component';
 @Component({
   selector: 'tos-root',
   templateUrl: './app.component.html',
-  providers: [IcrService,IcrComponent],
   styleUrls: ['./app.component.scss']
 })
 @Injectable()

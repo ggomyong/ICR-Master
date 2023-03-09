@@ -47,13 +47,15 @@ import {IcrDialog} from './icr/global.icr.dialog';
 import { MaterialFileInputModule } from 'ngx-material-file-input';
 import {MAT_DIALOG_DATA} from '@angular/material/dialog';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { IcrTabGroupComponent } from './icr/icr-tab-group/icr-tab-group.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
     IcrComponent,
-    IcrDialog
+    IcrDialog,
+    IcrTabGroupComponent
   ],
   imports: [
     BrowserModule,
@@ -97,9 +99,13 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
    MatToolbarModule,
    MatTooltipModule,
    MatTreeModule,
-   MaterialFileInputModule
+   MaterialFileInputModule,
+   
   ],
   providers: [],
+  exports: [
+    
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule {

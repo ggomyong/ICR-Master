@@ -24,7 +24,7 @@ export class Icr {
   keywords?: string[]
   dateCreated: string
   remoteProcedure: string
-
+  dateActivated: string;
   public constructor() {
     this.id=0;
     this.name='';
@@ -49,6 +49,7 @@ export class Icr {
     this.keywords = [];
     this.dateCreated = '';
     this.remoteProcedure = '';
+    this.dateActivated = '';
   }
 }
 
@@ -110,4 +111,11 @@ export class GlobalReference {
 export class SubscribingPackage{
   name: string;
   isc: string;
+  details: string[];
+  
+  public constructor() {
+    this.name = '';
+    this.isc = '';
+    this.details = [];
+  }
 }

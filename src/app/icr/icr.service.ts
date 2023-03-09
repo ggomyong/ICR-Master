@@ -10,7 +10,9 @@ export class IcrMaster{
   members:Array<string>;
 }
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class IcrService {
   icrUrl = '../../assets/Export_ICR.csv';
 

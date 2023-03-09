@@ -7,13 +7,10 @@ import {Field} from './icr';
 import {IcrField} from './icr-field';
 import {MatDialog} from '@angular/material/dialog';
 import { MatTableDataSource, MatTable } from '@angular/material/table';
-import {faGlobe} from '@fortawesome/free-solid-svg-icons';
-import {faCloud} from '@fortawesome/free-solid-svg-icons';
-import {faFileCode} from '@fortawesome/free-solid-svg-icons';
+
 import {IcrDialog} from './global.icr.dialog';
 @Component({
   selector: 'tos-icr',
-  providers: [IcrService],
   templateUrl: './icr.component.html',
   styleUrls: ['./icr.component.scss']
 })
@@ -51,19 +48,9 @@ export class IcrComponent implements OnInit {
   public loading:boolean=true;
   public breakpoint:number=3;
 
-  public fieldList: IcrField[] = [{value: '#',external: 'ID'},{value: 'val', external: 'Value'}, {value: 'desc', external: 'Description'}, {value: 'valdesc', external: 'Value+Description'}];
+  public fieldList: IcrField[] = [{value: '#',external: 'ID'},{value: 'val', external: 'Value'}, {value: 'desc', external: 'Description'}, {value: 'valdesc', external: 'Value+Description'}, {value: 'keyword', external: 'Keyword'}];
   public sortBy: IcrField[]=[{value: 'id', external: 'ID'}, {value: 'quality', external: 'Quality'}];
-  displayedColumns: string[] = ['file', 'value', 'direction', 'method'];
-  variableDisplayedColumns: string[] = ['name', 'type', 'description'];
-  get faGlobe() {
-    return faGlobe;
-  }
-  get faCloud() {
-    return faCloud;
-  }
-  get faFileCode() {
-    return faFileCode;
-  }
+ 
   public constructor(private icrService: IcrService, public dialog: MatDialog, private changeDetectorRef: ChangeDetectorRef) { }
    ngOnInit(): void {
     this.loading=true;
@@ -191,6 +178,7 @@ export class IcrComponent implements OnInit {
     let fieldDescription: boolean = false;
     let globalDescription: boolean = false;
     let componentDescription: boolean = false;
+    let subscribingDetails: boolean = false;
 
     let globalReference: GlobalReference = new GlobalReference();
 
@@ -198,13 +186,34 @@ export class IcrComponent implements OnInit {
 
     for (let text of texts) {
       let array=this.breakAndCombine(text);
-      
+      if (array.includes('STATUS:')) {
+        this.descriptionFlag = false;
+        variableDescription = false;
+        fieldDescription = false;
+        globalDescription = false;
+        componentDescription = false;
+          let temp1= JSON.parse(JSON.stringify(array))
+          temp1.splice(temp1.findIndex((node)=>node=='DURATION:'), temp1.length).join(' ')
+          icr.status=temp1.splice(1, temp1.length).join(' ')
+      }
+      if (array.includes('DURATION:')) {
+        this.descriptionFlag = false;
+        variableDescription = false;
+        fieldDescription = false;
+        globalDescription = false;
+        componentDescription = false;
+        array.splice(0, array.findIndex((node)=>node=='DURATION:')+1)
+        icr.duration = array.join(' ')
+      }
+
       if (!this.descriptionFlag) {
         if (array[0]=="NUMBER:") {
           fieldDescription = false;
           variableDescription = false;
           globalDescription = false;
           componentDescription= false;
+          subscribingDetails = false;
+
           if (icr.id>0) {
             icrList.push(icr.id.toString());
             if (this.isIcrUpdated(icr,this.getIcrById(icr.id))) {
@@ -373,7 +382,7 @@ export class IcrComponent implements OnInit {
         }
         if (array.includes('FIELD') && array.includes('NUMBER:') && array.join(' ').includes('FIELD NUMBER:')) {
           fieldDescription = false;
-          if (field.value && Number(field.value)>0) {
+          if (field.value) {
             globalReference.fields.push(field);
           }
           
@@ -420,6 +429,12 @@ export class IcrComponent implements OnInit {
           variableDescription = false
           globalDescription = false;
           fieldDescription = false;
+          subscribingDetails = false;
+          if (subscribingPackage && subscribingPackage.name && subscribingPackage.name.length>0) {
+            icr.subscribingPackages.push(subscribingPackage)
+            console.log(subscribingPackage);
+            subscribingPackage = new SubscribingPackage();
+          }
           let temp = JSON.parse(JSON.stringify(array))
           temp.splice(0, 2)
           if (temp.includes('ISC:')) {
@@ -428,18 +443,24 @@ export class IcrComponent implements OnInit {
           }
           subscribingPackage.name = temp.join(' ')
         }
+        if (array.join(' ').includes('DATE ACTIVATED:')) {
+          icr.dateActivated = array.join(' ').split('DATE ACTIVATED:')[1];
+        }
+        if (subscribingDetails || array.join(' ').includes('SUBSCRIBING DETAILS:')) {
+          subscribingDetails = true;
+          let temp1
+          if (array.join(' ').includes('SUBSCRIBING DETAILS:')) {
+            temp1 = array.join(' ').split('SUBSCRIBING DETAILS:')[1];
+          }
+          else {
+            temp1 = array.join(' ')
+          }
+          subscribingPackage.details.push(temp1);
+        }
+        
         if (array.includes('ISC:') && !array.includes('CUSTODIAL')) {
           let temp=JSON.parse(JSON.stringify(array))
           subscribingPackage.isc=temp.splice(array.findIndex((node)=>node=='ISC:')+1, temp.length).join(' ')
-          icr.subscribingPackages.push(subscribingPackage);
-          subscribingPackage = new SubscribingPackage();
-        }
-        if (array.includes('STATUS:') && array.includes('DURATION:')) {
-          globalDescription = false;
-          icr.status= array[array.findIndex((node)=>node=='STATUS:')+1]
-          let temp = JSON.parse(JSON.stringify(array))
-          temp.splice(0, temp.findIndex((node)=>node=='DURATION:')+1)
-          icr.duration = temp.join(' ')
         }
         if (array.includes('DESCRIPTION:') && array.includes('GENERAL')) {
           this.descriptionFlag=true;
@@ -493,18 +514,7 @@ export class IcrComponent implements OnInit {
         }
       }
       else {
-        if (array.includes('STATUS:')) {
-          this.descriptionFlag = false;
-          icr.status= array[array.findIndex((node)=>node=='STATUS:')+1]
-        }
-        if (array.includes('DURATION:')) {
-          this.descriptionFlag = false;
-          array.splice(0, array.findIndex((node)=>node=='DURATION:')+1)
-          icr.duration = array.join(' ')
-        }
-        else {
           icr.description.push(array.join(' '));
-        }
       }
     }
     //add the last item to the ICR.
@@ -559,12 +569,12 @@ export class IcrComponent implements OnInit {
 
         this.dataSource.filterPredicate =(data: Icr, filter: string) => {
           if (this.hideInvalid) {
-            if (data.status.toLowerCase()==='withdrawn' || data.status.toLowerCase()==='expired') {
+            if (data.status?.toLowerCase()==='withdrawn' || data.status?.toLowerCase()==='expired') {
               return false;
             }
           }
 
-          filter=filter.toLowerCase();
+          filter=filter?.toLowerCase();
           if (this.displayFilter.toUpperCase()=='R' && data.tags?.length<=0) return false;
           if (this.displayFilter.toUpperCase()=='G' && data.globalReferences?.length<=0) return false;
           if (this.displayFilter.toUpperCase()=='RPC' && data.remoteProcedure?.length<=0) return false;
@@ -575,7 +585,7 @@ export class IcrComponent implements OnInit {
           }
           else if (this.displayField==='val') {
             if (data.value==undefined || data.value==null) return false;
-            if (data.value.trim().toLowerCase().substr(0, filter.length) === filter) return true;
+            if (data.value.trim()?.toLowerCase().substr(0, filter.length) === filter) return true;
             if (data.file != undefined && data.file != null) {
               if (data.file.toString() === filter) return true;
             }
@@ -583,19 +593,25 @@ export class IcrComponent implements OnInit {
           }
           else if (this.displayField=='desc') {
             for (let desc of data.description) {
-              if (desc.trim().toLowerCase().includes(filter)) return true;
+              if (desc.trim()?.toLowerCase().includes(filter)) return true;
             }
             return false;
           }
           else if (this.displayField=='valdesc') {
             if (data.value!=undefined || data.value!=null) {
-              if (data.value.trim().toLowerCase().substr(0, filter.length) === filter) return true;
+              if (data.value.trim()?.toLowerCase().substr(0, filter.length) === filter) return true;
               if (data.file != undefined && data.file != null) {
                 if (data.file.toString() === filter) return true;
               }
             }
             for (let desc of data.description) {
-              if (desc.trim().toLowerCase().includes(filter)) return true;
+              if (desc.trim()?.toLowerCase().includes(filter.toLowerCase())) return true;
+            }
+            return false;
+          }
+          else if (this.displayField=='keyword') {
+            for (let keyword of data.keywords) {
+              if (keyword.trim()?.toLowerCase().includes(filter)) return true;
             }
             return false;
           }
@@ -656,7 +672,7 @@ export class IcrComponent implements OnInit {
 
   applyFilter(filterValue): void {
     filterValue = filterValue.trim(); // Remove whitespace
-    filterValue = filterValue.toLowerCase(); // MatTableDataSource defaults to lowercase matches
+    filterValue = filterValue?.toLowerCase(); // MatTableDataSource defaults to lowercase matches
     this.dataSource.filter = filterValue;
   }
   sortChange(): void {
@@ -767,31 +783,31 @@ isNumeric(val):boolean {
       let icr=this.icrs[i];
       //retired ICRs will not be considered as invalid
       //ICRs that have EXPIRES field wlil not be considered as invalid
-      if (icr.status.toLowerCase()==='withdrawn' || icr.status.toLowerCase()==='expired') {
+      if (icr.status?.toLowerCase()==='withdrawn' || icr.status?.toLowerCase()==='expired') {
         this.invalidIcrs.push(this.icrs[i]);
         this.icrs.splice(i,1);
         continue;
       }
       if (icr==undefined || icr==null) continue;
       let quality=0;
-      if (icr.status.toLowerCase()==='active') {
+      if (icr.status?.toLowerCase()==='active') {
         quality=100000;
       }
-      else if (icr.status.toLowerCase()==='retired') {
+      else if (icr.status?.toLowerCase()==='retired') {
         quality=-1000;
       }
 
-      if (icr.usage.toLowerCase()==='supported') {
+      if (icr.usage?.toLowerCase()==='supported') {
         quality=quality+10000;
       }
-      else if (icr.usage.toLowerCase()==='controlled') {
+      else if (icr.usage?.toLowerCase()==='controlled') {
         quality=quality+9000;
       }
-      else if (icr.usage.toLowerCase()==='private') {
+      else if (icr.usage?.toLowerCase()==='private') {
         quality=quality+8000;
       }
 
-      if (icr.dbicStatus.toLowerCase() === 'approved') {
+      if (icr.dbicStatus?.toLowerCase() === 'approved') {
         quality = quality + 10000;
       }
 

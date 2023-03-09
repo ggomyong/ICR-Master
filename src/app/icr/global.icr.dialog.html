@@ -48,126 +48,13 @@
     <div class="column">
       <label><b>DURATION:</b></label> {{data.icr.duration}}
     </div>
-
   </div>
-  <h2>{{data.icr.value}}</h2>
-  <mat-tab-group>
-    <mat-tab *ngIf="data.icr.globalReferences && data.icr.globalReferences.length>0" label="Global References">
-      <mat-card class="subcard" *ngFor="let globalReference of data.icr.globalReferences">
-        <mat-card-header>
-          <mat-card-title class="sub-title-font">{{globalReference.reference}}</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p class="description_p" *ngFor="let description of globalReference.description">
-            {{description}}
-          </p>
-          <b *ngIf="globalReference.fields && globalReference.fields.length>0">Fields</b>
-          <table #fieldTable *ngIf="globalReference.fields.length>0" mat-table [dataSource]="globalReference.fields"
-            class="mat-elevation-z8">
-            <!-- Position Column -->
-            <ng-container matColumnDef="file">
-              <th mat-header-cell *matHeaderCellDef> File </th>
-              <td mat-cell *matCellDef="let element"> {{element.file}} </td>
-            </ng-container>
-    
-            <!-- Name Column -->
-            <ng-container matColumnDef="value">
-              <th mat-header-cell *matHeaderCellDef> Field/Index </th>
-              <td mat-cell *matCellDef="let element"> {{element.value}} </td>
-            </ng-container>
-    
-            <!-- Weight Column -->
-            <ng-container matColumnDef="direction">
-              <th mat-header-cell *matHeaderCellDef> Direction </th>
-              <td mat-cell *matCellDef="let element"> {{element.direction}} </td>
-            </ng-container>
-    
-            <!-- Symbol Column -->
-            <ng-container matColumnDef="method">
-              <th mat-header-cell *matHeaderCellDef> Method </th>
-              <td mat-cell *matCellDef="let element"> {{element.method}} </td>
-            </ng-container>
-    
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-          </table>
-        </mat-card-content>
-      </mat-card>
-    </mat-tab>
-    <mat-tab *ngIf="data.icr.remoteProcedure && data.icr.remoteProcedure.length>0" label="Remote Procedure">
-      <mat-card-header>
-        <mat-card-title>
-          {{data.icr.remoteProcedure}}  
-        </mat-card-title>
-      </mat-card-header>
-    </mat-tab>
-    <mat-tab *ngIf="data.icr.tags && data.icr.tags.length>0" label="Component/Entry Point">
-      <mat-card *ngFor="let tag of data.icr.tags" class="subcard">
-        <mat-card-header>
-          <mat-card-title>
-            {{tag.name}}
-          </mat-card-title>
-    
-        </mat-card-header>
-        <mat-card-content>
-          <p class="description_p" *ngFor="let description of tag.description">
-            {{description}}
-          </p>
-    
-          <table #fieldTable *ngIf="tag.variables.length>0" mat-table [dataSource]="tag.variables" class="mat-elevation-z8">
-            <!-- Position Column -->
-            <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef> Variable </th>
-              <td mat-cell *matCellDef="let element"> {{element.name}} </td>
-            </ng-container>
-    
-            <!-- Name Column -->
-            <ng-container matColumnDef="type">
-              <th mat-header-cell *matHeaderCellDef> Type </th>
-              <td mat-cell *matCellDef="let element"> {{element.type}} </td>
-            </ng-container>
-    
-            <!-- Weight Column -->
-            <ng-container matColumnDef="description">
-              <th mat-header-cell *matHeaderCellDef> Variable Description </th>
-              <td mat-cell *matCellDef="let element">
-                <p class="description_p" *ngFor="let description of element.description">
-                  {{description}}
-                </p>
-              </td>
-            </ng-container>
-    
-            <tr mat-header-row *matHeaderRowDef="variableDisplayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: variableDisplayedColumns;"></tr>
-          </table>
-        </mat-card-content>
-      </mat-card>
-    </mat-tab>
-    
-    <mat-tab *ngIf="data.icr.description.length>0" label="Description">
-      <mat-card>
-        <mat-card-content>
-          <p *ngFor="let descr of data.icr.description">{{descr}}</p>
-        </mat-card-content>
-      </mat-card>
-    </mat-tab>
-    <mat-tab *ngIf="data.icr.subscribingPackages && data.icr.subscribingPackages.length>0" label="Subscribing Packages">
-      <mat-card class="subcard" *ngFor="let package of data.icr.subscribingPackages">
-        <mat-card-header>
-          <mat-card-title>
-            {{package.name}}
-          </mat-card-title>
-          <mat-card-subtitle>
-            {{package.isc}}
-          </mat-card-subtitle>
-        </mat-card-header>
-      </mat-card>
-    </mat-tab>
-  </mat-tab-group>
-  
-
-  
-
+  <div class="row">
+    <div class="column">
+      <label><b>DATE ACTIVATED:</b></label> {{data.icr.dateActivated}}
+    </div>
+  </div>
+  <app-icr-tab-group [icr]="data.icr" [expanded]="true"></app-icr-tab-group>
 </div>
 
 <div mat-dialog-actions style="text-align: right;">

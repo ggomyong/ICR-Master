@@ -1,0 +1,172 @@
+<mat-tab-group>
+    <mat-tab *ngIf="icr.globalReferences && icr.globalReferences.length>0">
+      <ng-template mat-tab-label>
+        <fa-icon [icon]="faGlobe"></fa-icon>
+        <span>&nbsp;Global References</span>
+    </ng-template>
+      <h2>{{icr.value}}</h2>
+      <mat-card class="subcard" *ngFor="let globalReference of icr.globalReferences">
+        <mat-card-header>
+          <mat-card-title class="sub-title-font">{{globalReference.reference}}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="description_p" *ngFor="let description of globalReference.description">
+            {{description}}
+          </p>
+        <b *ngIf="globalReference.fields && globalReference.fields.length>0">Fields</b>
+      <table #fieldTable *ngIf="globalReference.fields.length>0" mat-table [dataSource]="globalReference.fields" class="mat-elevation-z8">
+        <!-- Position Column -->
+        <ng-container matColumnDef="file">
+          <th mat-header-cell *matHeaderCellDef> File </th>
+          <td mat-cell *matCellDef="let element"> {{element.file}} </td>
+        </ng-container>
+
+        <!-- Name Column -->
+        <ng-container matColumnDef="value">
+          <th mat-header-cell *matHeaderCellDef> Field/Index </th>
+          <td mat-cell *matCellDef="let element"> {{element.value}} </td>
+        </ng-container>
+
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef> Field Name </th>
+          <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+        </ng-container>
+
+        <!-- Weight Column -->
+        <ng-container matColumnDef="direction">
+          <th mat-header-cell *matHeaderCellDef> Direction </th>
+          <td mat-cell *matCellDef="let element"> {{element.direction}} </td>
+        </ng-container>
+
+        <!-- Location Column -->
+        <ng-container matColumnDef="location">
+          <th mat-header-cell *matHeaderCellDef> Location </th>
+          <td mat-cell *matCellDef="let element"> {{element.location}} </td>
+        </ng-container>
+
+        <!-- Symbol Column -->
+        <ng-container matColumnDef="method">
+          <th mat-header-cell *matHeaderCellDef> Method </th>
+          <td mat-cell *matCellDef="let element"> {{element.method}} </td>
+        </ng-container>
+
+        <!-- Description Column -->
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef> Description </th>
+          <td mat-cell *matCellDef="let element"> {{element.description}} </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+    <mat-tab *ngIf="icr.remoteProcedure && icr.remoteProcedure.length>0">
+      <ng-template mat-tab-label>
+        <fa-icon [icon]="faCloud"></fa-icon>
+        <span>&nbsp;Remote Procedure</span>
+    </ng-template>
+      <mat-card-header>
+        <mat-card-title>
+          {{icr.remoteProcedure}}
+        </mat-card-title>
+      </mat-card-header>
+    </mat-tab>
+    <mat-tab *ngIf="icr.tags && icr.tags.length>0">
+      <ng-template mat-tab-label>
+        <fa-icon [icon]="faFileCode"></fa-icon>
+        <span>&nbsp;Component/Entry Point</span>
+    </ng-template>
+      <h2>{{icr.value}}</h2>
+      <mat-card *ngFor="let tag of icr.tags" class="subcard">
+        <mat-card-header>
+          <mat-card-title>
+            {{tag.name}}
+          </mat-card-title>
+          
+        </mat-card-header>
+        <mat-card-content>
+          <p class="description_p" *ngFor="let description of tag.description">
+            {{description}}
+          </p>
+
+          <table #fieldTable *ngIf="tag.variables.length>0" mat-table [dataSource]="tag.variables" class="mat-elevation-z8">
+            <!-- Position Column -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef> Variable </th>
+              <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+            </ng-container>
+
+            <!-- Name Column -->
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef> Type </th>
+              <td mat-cell *matCellDef="let element"> {{element.type}} </td>
+            </ng-container>
+
+            <!-- Weight Column -->
+            <ng-container matColumnDef="description">
+              <th mat-header-cell *matHeaderCellDef> Variable Description </th>
+              <td mat-cell *matCellDef="let element"> 
+                <p class="description_p" *ngFor="let description of element.description">
+                  {{description}}
+                </p>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="variableDisplayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: variableDisplayedColumns;"></tr>
+          </table>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+    
+    <mat-tab *ngIf="icr.description && icr.description.length>0">
+      <ng-template mat-tab-label>
+        <fa-icon [icon]="faInfo"></fa-icon>
+        <span>&nbsp;Description</span>
+    </ng-template>
+      <mat-card>
+        <mat-card-content>
+          <p *ngFor="let description of icr.description">
+            {{description}}
+          </p>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+    <mat-tab *ngIf="icr.subscribingPackages && icr.subscribingPackages.length>0">
+      <ng-template mat-tab-label>
+        <fa-icon [icon]="faBell"></fa-icon>
+        <span>&nbsp;Subscribing Package</span>
+    </ng-template>
+      <mat-card class="subcard" *ngFor="let package of icr.subscribingPackages">
+        <mat-card-header>
+          <mat-card-title>
+            {{package.name}}
+          </mat-card-title>
+          <mat-card-subtitle *ngIf="package.isc && package.isc.length>0">
+            ISC: {{package.isc}} 
+          </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p *ngFor="let detail of package.details">
+            {{detail}}
+          </p>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+    <mat-tab *ngIf="icr.keywords && icr.keywords.length>0">
+      <ng-template mat-tab-label>
+        <fa-icon [icon]="faKey"></fa-icon>
+        <span>&nbsp;Keywords</span>
+    </ng-template>
+      <mat-card *ngFor="let key of icr.keywords">
+        <mat-card-header>
+          <mat-card-title>
+            {{key}}
+          </mat-card-title>
+        </mat-card-header>
+      </mat-card>
+    </mat-tab>
+  </mat-tab-group>
